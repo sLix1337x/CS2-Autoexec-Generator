@@ -1,0 +1,16 @@
+{
+  "name": "CS2 Autoexec Generator",
+  "short_name": "CS2 Config",
+  "description": "Generate custom Counter-Strike 2 autoexec.cfg files with an easy-to-use interface",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#FF8200",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -1,0 +1,854 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Press+Start+2P&family=Source+Code+Pro:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 25 95% 53%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 25 95% 58%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 25 95% 53%;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 240 10% 97%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 200 100% 85%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 240 10% 90%;
+    --muted-foreground: 0 0% 40%;
+    --accent: 300 100% 90%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 80%;
+    --input: 0 0% 80%;
+    --ring: 25 95% 53%;
+    --radius: 0.25rem;
+  }
+
+  .dark {
+    --background: 80 20% 17%; /* deep olive */
+    --foreground: 70 40% 90%; /* light warm green */
+    --card: 80 19% 22%; /* panel olive */
+    --card-foreground: 70 40% 92%;
+    --popover: 80 19% 22%;
+    --popover-foreground: 70 40% 92%;
+    --primary: 82 35% 62%; /* highlight lime */
+    --primary-foreground: 80 20% 15%;
+    --secondary: 80 12% 14%; /* dark bar */
+    --secondary-foreground: 70 40% 92%;
+    --muted: 80 18% 28%; /* mid olive */
+    --muted-foreground: 70 25% 78%;
+    --accent: 80 28% 50%; /* accent-green */
+    --accent-foreground: 70 40% 92%;
+    --destructive: 0 60% 40%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 80 25% 38%; /* olive border */
+    --input: 80 25% 38%;
+    --ring: 82 35% 62%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    min-height: 100vh;
+    /* Steam 2003 background color; texture can be added from /public later */
+    background-color: #4C5844;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-foreground;
+    font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+    line-height: 1.2;
+  }
+  
+  h1 {
+    @apply text-4xl md:text-5xl mb-6;
+  }
+  
+  h2 {
+    @apply text-3xl mb-6;
+    background: linear-gradient(90deg, var(--tw-gradient-from), var(--tw-gradient-to));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    --tw-gradient-from: hsl(var(--primary));
+    --tw-gradient-to: hsl(var(--primary) / 0.8);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  }
+  
+  h3 {
+    @apply text-2xl mb-4;
+  }
+  
+  h4 {
+    @apply text-xl mb-3;
+  }
+  
+  p {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  /* Links */
+  a {
+    @apply text-primary underline-offset-4 hover:underline;
+  }
+  
+  /* Buttons */
+  button, .btn {
+    @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+    font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  /* Button variants */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground border border-primary/20 shadow-sm hover:bg-primary/90 hover:shadow-md active:translate-y-0.5 active:shadow-sm;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground border border-border/50 shadow-sm hover:bg-secondary/80 hover:shadow-md active:translate-y-0.5 active:shadow-sm;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent border border-border text-foreground hover:bg-accent/50 hover:text-accent-foreground hover:border-accent/50;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent hover:bg-accent/50 text-foreground hover:text-accent-foreground border border-transparent;
+  }
+  
+  .btn-link {
+    @apply underline-offset-4 hover:underline text-primary bg-transparent hover:bg-transparent;
+  }
+  
+  .btn-sm {
+    @apply h-9 px-3 text-xs;
+  }
+  
+  .btn-md {
+    @apply h-10 px-4 py-2 text-sm;
+  }
+  
+  .btn-lg {
+    @apply h-11 px-8 text-base;
+  }
+  
+  /* Button hover/active effects */
+  button:not(.btn-ghost, .btn-link)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    z-index: -1;
+  }
+  
+  button:not(.btn-ghost, .btn-link):hover::before {
+    transform: translateX(100%);
+  }
+  
+  /* Focus states */
+  button:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+  
+  /* Disabled state */
+  button:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+  
+  /* Button group */
+  .btn-group {
+    @apply inline-flex rounded-md shadow-sm [&>button]:rounded-none [&>button:first-child]:rounded-l-md [&>button:last-child]:rounded-r-md [&>button:not(:first-child)]:-ml-px;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-card text-card-foreground rounded-lg border shadow-sm overflow-hidden;
+  }
+  
+  .card-header {
+    @apply p-4 border-b border-border;
+  }
+  
+  .card-content {
+    @apply p-4;
+  }
+  
+  .card-footer {
+    @apply p-4 border-t border-border bg-muted/10;
+  }
+  
+  /* Form elements */
+  input, select, textarea {
+    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  
+  /* Dark mode overrides */
+  .dark {
+    .btn-primary {
+      @apply bg-primary/90 hover:bg-primary border-primary/50;
+    }
+    
+    .btn-secondary {
+      @apply bg-secondary/90 hover:bg-secondary/80 border-border/70;
+    }
+    
+    .btn-outline {
+      @apply border-border/50 hover:border-primary/50 hover:bg-background/50;
+    }
+    
+    .btn-ghost {
+      @apply hover:bg-accent/30 hover:text-foreground;
+    }
+    
+    .btn-link {
+      @apply text-primary/90 hover:text-primary;
+    }
+    
+    input, select, textarea {
+      @apply bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground/60;
+    }
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f0f0e8;
+    border-left: 2px solid black;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: black;
+    border: 2px solid #f0f0e8;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333;
+  }
+  
+  /* Selection style */
+  ::selection {
+    background: #ff0;
+    color: #000;
+  }
+  
+  /* Custom focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-offset-2 ring-yellow-400;
+  }
+  
+  /* Custom animation for buttons */
+  @keyframes button-press {
+    0% { transform: translateY(0); box-shadow: 3px 3px 0 0 #000; }
+    100% { transform: translateY(2px); box-shadow: 1px 1px 0 0 #000; }
+  }
+  
+  button:active, .btn:active {
+  animation: button-press 0.1s ease-out;
+}
+/* Steam 2003 tokens and utilities */
+:root {
+  --steam-bg-dark: #293021;
+  --steam-panel: #4C5844;
+  --steam-panel-dark: #3E4637;
+  --steam-text: #FFFFFF;
+  --steam-text-light: #A0AA95;
+  --steam-accent: #C4B550;
+  --steam-link: #c6b652;
+  --steam-border-light: #889180;
+  --steam-border-dark: #282E22;
+}
+
+.steam-shadow { box-shadow: 5px 5px 0 rgba(0,0,0,0.3); }
+
+.steam-outset {
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+  background-color: var(--steam-panel);
+  color: var(--steam-text);
+}
+
+.steam-inset {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel);
+  color: var(--steam-text-light);
+}
+
+.steam-button {
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+  background-color: var(--steam-panel);
+  color: var(--steam-text);
+}
+.steam-button:active {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel-dark);
+  color: var(--steam-accent);
+  box-shadow: none;
+}
+
+.steam-h3 {
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--steam-accent);
+  margin: 5px 10px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--steam-border-dark);
+  text-transform: uppercase;
+  padding-left: 10px;
+}
+
+.steam-link { color: var(--steam-link); text-decoration: none; }
+.steam-link:hover { background: var(--steam-panel-dark); color: var(--steam-link); }
+
+.steam-input {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel);
+  color: var(--steam-text-light);
+}
+
+/* WebKit scrollbar to mimic Steam 2003 */
+::-webkit-scrollbar {
+  background-color: #5a6a50;
+  width: 20px;
+}
+::-webkit-scrollbar-button {
+  width: 20px; height: 20px; background-color: var(--steam-panel);
+  border-style: outset; border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--steam-panel);
+  border-style: outset; border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+}
+
+/* Add body base font-size for authentic Tahoma sizing */
+body {
+  @apply bg-background text-foreground;
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+  min-height: 100vh;
+  /* Steam 2003 background color; texture can be added from /public later */
+  background-color: #4C5844;
+  background-image: none;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-bold tracking-tight text-foreground;
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  line-height: 1.2;
+}
+
+h1 {
+  @apply text-4xl md:text-5xl mb-6;
+}
+
+h2 {
+  @apply text-3xl mb-6;
+  background: linear-gradient(90deg, var(--tw-gradient-from), var(--tw-gradient-to));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  --tw-gradient-from: hsl(var(--primary));
+  --tw-gradient-to: hsl(var(--primary) / 0.8);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+h3 {
+  @apply text-2xl mb-4;
+}
+
+h4 {
+  @apply text-xl mb-3;
+}
+
+p {
+  @apply mb-4 leading-relaxed;
+}
+
+/* Links */
+a {
+  @apply text-primary underline-offset-4 hover:underline;
+}
+
+/* Buttons */
+button, .btn {
+  @apply inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Button variants */
+.btn-primary {
+  @apply bg-primary text-primary-foreground border border-primary/20 shadow-sm hover:bg-primary/90 hover:shadow-md active:translate-y-0.5 active:shadow-sm;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground border border-border/50 shadow-sm hover:bg-secondary/80 hover:shadow-md active:translate-y-0.5 active:shadow-sm;
+}
+
+.btn-outline {
+  @apply bg-transparent border border-border text-foreground hover:bg-accent/50 hover:text-accent-foreground hover:border-accent/50;
+}
+
+.btn-ghost {
+  @apply bg-transparent hover:bg-accent/50 text-foreground hover:text-accent-foreground border border-transparent;
+}
+
+.btn-link {
+  @apply underline-offset-4 hover:underline text-primary bg-transparent hover:bg-transparent;
+}
+
+.btn-sm {
+  @apply h-9 px-3 text-xs;
+}
+
+.btn-md {
+  @apply h-10 px-4 py-2 text-sm;
+}
+
+.btn-lg {
+  @apply h-11 px-8 text-base;
+}
+
+/* Button hover/active effects */
+button:not(.btn-ghost, .btn-link)::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  z-index: -1;
+}
+
+button:not(.btn-ghost, .btn-link):hover::before {
+  transform: translateX(100%);
+}
+
+/* Focus states */
+button:focus-visible {
+  @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+}
+
+/* Disabled state */
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Button group */
+.btn-group {
+  @apply inline-flex rounded-md shadow-sm [&>button]:rounded-none [&>button:first-child]:rounded-l-md [&>button:last-child]:rounded-r-md [&>button:not(:first-child)]:-ml-px;
+}
+
+/* Card styles */
+.card {
+  @apply bg-card text-card-foreground rounded-lg border shadow-sm overflow-hidden;
+}
+
+.card-header {
+  @apply p-4 border-b border-border;
+}
+
+.card-content {
+  @apply p-4;
+}
+
+.card-footer {
+  @apply p-4 border-t border-border bg-muted/10;
+}
+
+/* Form elements */
+input, select, textarea {
+  @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+/* Dark mode overrides */
+.dark {
+  .btn-primary {
+    @apply bg-primary/90 hover:bg-primary border-primary/50;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary/90 hover:bg-secondary/80 border-border/70;
+  }
+  
+  .btn-outline {
+    @apply border-border/50 hover:border-primary/50 hover:bg-background/50;
+  }
+  
+  .btn-ghost {
+    @apply hover:bg-accent/30 hover:text-foreground;
+  }
+  
+  .btn-link {
+    @apply text-primary/90 hover:text-primary;
+  }
+  
+  input, select, textarea {
+    @apply bg-background/50 border-border/50 text-foreground placeholder:text-muted-foreground/60;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f0f0e8;
+  border-left: 2px solid black;
+}
+
+::-webkit-scrollbar-thumb {
+  background: black;
+  border: 2px solid #f0f0e8;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
+}
+
+/* Selection style */
+::selection {
+  background: #ff0;
+  color: #000;
+}
+
+/* Custom focus styles */
+*:focus-visible {
+  @apply outline-none ring-2 ring-offset-2 ring-yellow-400;
+}
+
+/* Custom animation for buttons */
+@keyframes button-press {
+  0% { transform: translateY(0); box-shadow: 3px 3px 0 0 #000; }
+  100% { transform: translateY(2px); box-shadow: 1px 1px 0 0 #000; }
+}
+
+button:active, .btn:active {
+  animation: button-press 0.1s ease-out;
+}
+}
+
+/* Steam 2003 tokens and utilities */
+:root {
+  --steam-bg-dark: #293021;
+  --steam-panel: #4C5844;
+  --steam-panel-dark: #3E4637;
+  --steam-text: #FFFFFF;
+  --steam-text-light: #A0AA95;
+  --steam-accent: #C4B550;
+  --steam-link: #c6b652;
+  --steam-border-light: #889180;
+  --steam-border-dark: #282E22;
+}
+
+.steam-shadow { box-shadow: 5px 5px 0 rgba(0,0,0,0.3); }
+
+.steam-outset {
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+  background-color: var(--steam-panel);
+  color: var(--steam-text);
+}
+
+.steam-inset {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel);
+  color: var(--steam-text-light);
+}
+
+.steam-button {
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+  background-color: var(--steam-panel);
+  color: var(--steam-text);
+}
+.steam-button:active {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel-dark);
+  color: var(--steam-accent);
+  box-shadow: none;
+}
+
+.steam-h3 {
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--steam-accent);
+  margin: 5px 10px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--steam-border-dark);
+  text-transform: uppercase;
+  padding-left: 10px;
+}
+
+.steam-link { color: var(--steam-link); text-decoration: none; }
+.steam-link:hover { background: var(--steam-panel-dark); color: var(--steam-link); }
+
+.steam-input {
+  border-style: inset;
+  border-width: 1px;
+  border-color: var(--steam-border-dark) var(--steam-border-light) var(--steam-border-light) var(--steam-border-dark);
+  background-color: var(--steam-panel);
+  color: var(--steam-text-light);
+}
+
+/* WebKit scrollbar to mimic Steam 2003 */
+::-webkit-scrollbar {
+  background-color: #5a6a50;
+  width: 20px;
+}
+::-webkit-scrollbar-button {
+  width: 20px; height: 20px; background-color: var(--steam-panel);
+  border-style: outset; border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--steam-panel);
+  border-style: outset; border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+}
+
+/* Steam titlebar, separators, and window controls */
+.steam-titlebar {
+  background: linear-gradient(to bottom, #5a6a50 0%, #414a3a 100%);
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+  color: var(--steam-text);
+}
+
+.steam-separator-h {
+  height: 1px;
+  background-color: var(--steam-border-dark);
+}
+
+.steam-separator-v {
+  width: 1px;
+  background-color: var(--steam-border-dark);
+}
+
+.steam-win-button {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 12px;
+  color: var(--steam-text);
+  background-color: var(--steam-panel);
+  border-style: outset;
+  border-width: 1px;
+  border-color: var(--steam-border-light) var(--steam-border-dark) var(--steam-border-dark) var(--steam-border-light);
+}
+.steam-win-button:active {
+  border-style: inset;
+  background-color: var(--steam-panel-dark);
+  color: var(--steam-accent);
+}
+
+/* Retro Header Styles */
+.retro-header-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 40px auto;
+  max-width: 1000px;
+}
+
+/* Top green section */
+.retro-header-top {
+  background-color: #282E22; /* dark green */
+  color: #f2f2f2;
+  width: 100%;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 40px 20px;
+  text-align: center;
+  box-shadow: 0 2px 0 #00000033;
+  margin-bottom: 6px; /* spacing gap */
+}
+
+/* Bottom black section */
+.retro-header-bottom {
+  background-color: #111111; /* black */
+  width: 100%;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  padding: 30px 20px;
+  color: #cccccc;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Retro Form Styles */
+.retro-form-wrapper {
+  @apply bg-transparent rounded-lg overflow-hidden mb-8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.retro-form-section {
+  @apply bg-[#3E4637] text-white p-6 rounded-lg;
+  margin-bottom: 6px;
+}
+
+.retro-form-section:last-child {
+  margin-bottom: 0;
+}
+
+.retro-form-actions {
+  @apply bg-black text-white p-4 rounded-lg mt-4 flex flex-wrap gap-4 justify-center;
+}
+
+/* Standalone Preview Window */
+.retro-preview-standalone {
+  @apply bg-[#3E4637] text-white rounded-lg mb-8;
+}
+
+.retro-preview-header {
+  @apply bg-[#111111] text-white p-4 rounded-t-lg flex items-center justify-between;
+}
+
+.retro-preview-content {
+  @apply p-4 rounded-b-lg;
+}
+
+.retro-preview-code {
+  @apply bg-[#1a1a1a] text-[#dedfd6] p-4 rounded font-ui text-sm;
+  border: 1px solid #282E22;
+  border-style: inset;
+}
+
+.retro-preview-code.collapsed {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.retro-preview-code.expanded {
+  max-height: none;
+  overflow: visible;
+}
