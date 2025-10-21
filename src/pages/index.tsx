@@ -22,7 +22,8 @@ export default function HomePage() {
   // Setup form with all the comprehensive HUD & UI Advanced Settings
   const methods = useForm<AutoexecFormValues>({
     resolver: zodResolver(autoexecFormSchema),
-    defaultValues: defaultAutoexecValues,
+    // Ensure default values conform to the zod schema and strip unknown keys
+    defaultValues: autoexecFormSchema.parse(defaultAutoexecValues as any),
     mode: 'onChange',
   });
   
