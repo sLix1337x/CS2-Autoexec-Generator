@@ -14,17 +14,25 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   // Utility to check if a per-setting checkbox is enabled (defined early to avoid ReferenceError)
   const shouldInclude = (key: string) => Boolean(formData?.includeCommands?.[key]);
 
-  // Helper function for consistent alignment
+  // Helper function for consistent formatting - commands start at beginning with aligned values
   const formatCommand = (command: string, value: string, description?: string): string => {
     const commandPart = command;
+    
+    // Handle empty values (like host_writeconfig which doesn't need a value)
+    if (value === '') {
+      const commandWithSemicolon = `${commandPart};`;
+      return description !== undefined
+        ? `${commandWithSemicolon} // ${description}`
+        : commandWithSemicolon;
+    }
+    
     const valuePart = `"${value}";`;
     
-    // Align values at column 60, comments at column 90
+    // Align values at column 60 for consistency
     const valueSpacing = ' '.repeat(Math.max(1, 60 - commandPart.length));
-    const commentSpacing = ' '.repeat(Math.max(1, 90 - (commandPart.length + valueSpacing.length + valuePart.length)));
     
     return description !== undefined
-      ? `${commandPart}${valueSpacing}${valuePart}${commentSpacing}// ${description}`
+      ? `${commandPart}${valueSpacing}${valuePart} // ${description}`
       : `${commandPart}${valueSpacing}${valuePart}`;
   };
 
@@ -83,9 +91,9 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
 
 
   // Initialization header messages
-  content.push('echo |                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]');
-  content.push('echo |                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]');
-  content.push('echo |                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]');
+  content.push(formatCommand('echo', '"|                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]"'));
+  content.push(formatCommand('echo', '"|                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]"'));
+  content.push(formatCommand('echo', '"|                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]"'));
   content.push('');
 
 
@@ -317,7 +325,7 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
     // Crosshair toggle alias (conditional)
     if (formData?.includeCommands?.alias_crosshair_toggle) {
       content.push('    // CROSSHAIR //');
-      content.push('alias "toggle_crosshair_color" "cl_crosshaircolor_r 255; cl_crosshaircolor_g 255; toggle cl_crosshaircolor_b 0 255"');
+      content.push(formatCommand('alias "toggle_crosshair_color"', 'cl_crosshaircolor_r 255; cl_crosshaircolor_g 255; toggle cl_crosshaircolor_b 0 255'));
       content.push('');
     }
   }
@@ -487,40 +495,44 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   // Final Config Save (only if explicitly enabled)
   if (formData.includeConfigSave) {
     content.push('// --- CONFIG SAVE ---');
-    content.push('host_writeconfig;');
-    content.push('echo                                                            "CS2 autoexec.cfg loaded successfully.";');
+    content.push(formatCommand('host_writeconfig', ''));
+    content.push(formatCommand('echo', 'CS2 autoexec.cfg loaded successfully.'));
     content.push('');
   }
 
   // Finish Message with ASCII Art
   // Removed 'FINISH MESSAGE' marker from preview output per request
-  content.push('echo |                                                                              .-Y');
-  content.push('echo |                                     [AUTOEXEC] Initializing configuration..."');
-  content.push('echo |                                  -x"');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
-  content.push('echo |');
-  content.push('echo |                                             [ SYSTEM OPTIMIZED ]');
-  content.push('echo |                                           [ ALL SYSTEMS LAUNCHED ]');
+  content.push(formatCommand('echo', '"|                                                                              .-Y"'));
+  content.push(formatCommand('echo', '"|                                     [AUTOEXEC] Initializing configuration...\""'));
+  content.push(formatCommand('echo', '"|                                  -x\""'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD"'));
+  content.push(formatCommand('echo', '"|"'));
+  content.push(formatCommand('echo', '"|                                             [ SYSTEM OPTIMIZED ]"'));
+  content.push(formatCommand('echo', '"|                                           [ ALL SYSTEMS LAUNCHED ]"'));
 
   return content;
 }

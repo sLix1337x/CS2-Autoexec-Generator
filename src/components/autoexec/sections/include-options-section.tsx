@@ -392,10 +392,144 @@ export function IncludeOptionsSection() {
         <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="text-white font-semibold text-sm font-ui">Console</h4>
-            <SectionSwitch name="con_enable" ariaLabel="Enable console" />
+            <SettingCheckbox name="con_enable" label="" />
           </div>
           <p className="text-xs text-gray-300">Enable the developer console. Allows access to advanced commands and debugging.</p>
         </div>
+      </div>
+
+      {/* Presets */}
+      <div className="mb-4">
+        <h4 className="text-white font-semibold text-sm font-ui mb-2">PRESETS</h4>
+        <div className="flex gap-2 mb-1">
+          <button
+            type="button"
+            onClick={() => {
+              // Check if everything is already selected by checking a few key sections
+              const allSelected = watch('includeSections.binds') && 
+                                watch('includeSections.settings') && 
+                                watch('includeSections.aliases') &&
+                                watch('includeCommands.fps_max');
+              
+              const newValue = !allSelected;
+              
+              // Toggle all includeSections
+              setValue('includeSections.binds', newValue);
+              setValue('includeSections.movementBinds', newValue);
+              setValue('includeSections.weaponsActionBinds', newValue);
+              setValue('includeSections.uiCommBinds', newValue);
+              setValue('includeSections.customBinds', newValue);
+              setValue('includeSections.aliases', newValue);
+              setValue('includeSections.settings', newValue);
+              setValue('includeSections.hud', newValue);
+              setValue('includeSections.hudAdvanced', newValue);
+              setValue('includeSections.mouseCrosshair', newValue);
+              setValue('includeSections.viewmodel', newValue);
+              setValue('includeSections.video', newValue);
+              setValue('includeSections.sound', newValue);
+              setValue('includeSections.rate', newValue);
+              setValue('includeSections.additional', newValue);
+              setValue('includeSections.gameSettings', newValue);
+              setValue('includeSections.fpsMax', newValue);
+              setValue('includeSections.teamEquipment', newValue);
+              setValue('includeSections.audioBuffer', newValue);
+              setValue('includeSections.headphoneAudio', newValue);
+              setValue('includeSections.maxPing', newValue);
+              setValue('includeSections.firstPersonTracers', newValue);
+              
+              // Toggle all includeCommands - aliases
+              setValue('includeCommands.fps_max', newValue);
+              setValue('includeCommands.alias_dropbomb', newValue);
+              setValue('includeCommands.alias_crosshair_toggle', newValue);
+              
+              // Toggle all HUD commands
+              HUD_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all CROSSHAIR commands
+              CROSSHAIR_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all VIEWMODEL commands
+              VIEWMODEL_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all AUDIO commands
+              AUDIO_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all NETWORK commands
+              NETWORK_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all GAME commands
+              GAME_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+            }}
+            className="px-2 py-1 bg-[#6369D1] hover:bg-[#5B63C4] rounded text-white text-xs font-medium transition-colors"
+          >
+            SELECT ALL
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // Check if settings are already selected by checking key settings sections
+              const settingsSelected = watch('includeSections.settings') && 
+                                      watch('includeSections.hud') && 
+                                      watch('includeSections.mouseCrosshair') &&
+                                      watch('includeCommands.fps_max');
+              
+              const newValue = !settingsSelected;
+              
+              // Disable binds and aliases (always false when toggling settings)
+              setValue('includeSections.binds', false);
+              setValue('includeSections.movementBinds', false);
+              setValue('includeSections.weaponsActionBinds', false);
+              setValue('includeSections.uiCommBinds', false);
+              setValue('includeSections.customBinds', false);
+              setValue('includeSections.aliases', false);
+              
+              // Toggle only settings-related sections
+              setValue('includeSections.settings', newValue);
+              setValue('includeSections.hud', newValue);
+              setValue('includeSections.hudAdvanced', newValue);
+              setValue('includeSections.mouseCrosshair', newValue);
+              setValue('includeSections.viewmodel', newValue);
+              setValue('includeSections.video', newValue);
+              setValue('includeSections.sound', newValue);
+              setValue('includeSections.rate', newValue);
+              setValue('includeSections.additional', newValue);
+              setValue('includeSections.gameSettings', newValue);
+              setValue('includeSections.fpsMax', newValue);
+              setValue('includeSections.teamEquipment', newValue);
+              setValue('includeSections.audioBuffer', newValue);
+              setValue('includeSections.headphoneAudio', newValue);
+              setValue('includeSections.maxPing', newValue);
+              setValue('includeSections.firstPersonTracers', newValue);
+              
+              // Toggle settings-related commands, disable alias commands
+              setValue('includeCommands.fps_max', newValue);
+              setValue('includeCommands.alias_dropbomb', false);
+              setValue('includeCommands.alias_crosshair_toggle', false);
+              
+              // Toggle all HUD commands
+              HUD_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all CROSSHAIR commands
+              CROSSHAIR_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all VIEWMODEL commands
+              VIEWMODEL_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all AUDIO commands
+              AUDIO_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all NETWORK commands
+              NETWORK_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+              
+              // Toggle all GAME commands
+              GAME_KEYS.forEach((key) => setValue(`includeCommands.${key}`, newValue));
+            }}
+            className="px-2 py-1 bg-[#6369D1] hover:bg-[#5B63C4] rounded text-white text-xs font-medium transition-colors"
+          >
+            ONLY SETTINGS
+          </button>
+        </div>
+        <p className="text-xs text-gray-400">Quick selection presets for fast configuration.</p>
       </div>
 
       {/* Key Bindings Panel */}
