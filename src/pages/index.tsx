@@ -10,13 +10,12 @@ import { RetroButton } from '@/components/ui/retro-button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/retro-card';
 import AutoexecForm from '@/components/autoexec/autoexec-form';
 import StandalonePreview from '@/components/autoexec/standalone-preview';
-import PreviewDialog from '@/components/autoexec/preview-dialog';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 
 
 export default function HomePage() {
-  const [previewOpen, setPreviewOpen] = useState(false);
+
   const router = useRouter();
   
   // Setup form with all the comprehensive HUD & UI Advanced Settings
@@ -64,10 +63,6 @@ export default function HomePage() {
       });
     }
   }, []);
-  
-  const handlePreview = useCallback(() => {
-    setPreviewOpen(true);
-  }, []);
 
   return (
     <MainLayout>
@@ -94,30 +89,35 @@ export default function HomePage() {
             </div>
             
             <div className="retro-header-bottom">
-              <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <section className="space-y-4" aria-labelledby="features-heading">
-                  <h2 id="features-heading" className="text-2xl font-ui">Features</h2>
-                  <ul className="space-y-2 font-ui" aria-label="Feature list">
-                    <li className="flex items-start">
-                      <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-2 flex-shrink-0" aria-hidden="true"></span>
-                      <span>Advanced HUD & UI Settings</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-2 flex-shrink-0" aria-hidden="true"></span>
-                      <span>Crosshair Customization</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-2 flex-shrink-0" aria-hidden="true"></span>
-                      <span>Radar & Minimap Tweaks</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-2 flex-shrink-0" aria-hidden="true"></span>
-                      <span>Performance Optimizations</span>
-                    </li>
-                  </ul>
-                </section>
-                
-                <section className="space-y-4" aria-labelledby="quickstart-heading">
+              <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                <div className="relative bg-[url('/images/cs2-bg-texture.webp')] bg-no-repeat bg-left-bottom [background-size:auto_100%]">
+                  <section className="space-y-4 relative z-10" aria-labelledby="features-heading">
+
+                    <div className="px-4 md:px-6 lg:px-8 flex flex-col items-center">
+                      <h2 id="features-heading" className="text-2xl font-ui text-center">Features</h2>
+                      <ul className="space-y-2 font-ui w-fit mx-auto text-left" aria-label="Feature list">
+                       <li className="flex items-center">
+                         <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-3 flex-shrink-0" aria-hidden="true"></span>
+                         <span>Advanced HUD & UI Settings</span>
+                       </li>
+                      <li className="flex items-center">
+                        <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-3 flex-shrink-0" aria-hidden="true"></span>
+                        <span>Crosshair Customization</span>
+                      </li>
+                      <li className="flex items-center">
+                        <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-3 flex-shrink-0" aria-hidden="true"></span>
+                        <span>Custom Key Bindings</span>
+                      </li>
+                      <li className="flex items-center">
+                        <span className="inline-block w-6 h-6 bg-yellow-400 border-2 border-black mr-3 flex-shrink-0" aria-hidden="true"></span>
+                        <span>Network Optimizations</span>
+                      </li>
+                    </ul>
+                    </div>
+                   </section>
+                 </div>
+                 
+                 <section className="space-y-4 pb-6 md:pb-8 lg:pb-10" aria-labelledby="quickstart-heading">
                   <h2 id="quickstart-heading" className="text-2xl font-ui">Quick Start</h2>
                   <ol className="space-y-2 list-decimal list-inside font-ui" aria-label="Quick start steps">
                     <li>Configure your settings below</li>
@@ -132,18 +132,9 @@ export default function HomePage() {
                       onClick={methods.handleSubmit(onSubmit)}
                       variant="primary"
                       className="text-sm md:text-base"
-                      aria-label="Generate autoexec.cfg"
+                      aria-label="Download autoexec.cfg"
                     >
-                      Generate Autoexec
-                    </RetroButton>
-                    <RetroButton 
-                      type="button"
-                      onClick={handlePreview}
-                      variant="outline"
-                      className="text-sm md:text-base"
-                      aria-label="Preview autoexec configuration"
-                    >
-                      Preview Config
+                      Download Autoexec
                     </RetroButton>
                   </div>
                 </section>
@@ -159,12 +150,6 @@ export default function HomePage() {
 
           {/* CheckmarkSection - rebuilt from scratch */}
           {/* Included via AutoexecForm accordion; removed separate IncludeOptionsSection */}
-          
-          <PreviewDialog 
-            open={previewOpen} 
-            onOpenChange={setPreviewOpen}
-            getValues={methods.getValues}
-          />
         </article>
       </MainLayout>
     );

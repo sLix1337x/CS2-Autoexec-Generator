@@ -28,6 +28,44 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
       : `${commandPart}${valueSpacing}${valuePart}`;
   };
 
+  // Normalize keys to scancodes when possible
+  const toScancode = (key: string): string => {
+    if (!key) return key;
+    const normalized = key.trim().replace(/\"/g, '').toLowerCase();
+    if (normalized.startsWith('scancode')) return normalized;
+    const map: Record<string, string> = {
+      // Movement
+      'w': 'scancode26', 'key_w': 'scancode26',
+      'a': 'scancode4', 'key_a': 'scancode4',
+      's': 'scancode22', 'key_s': 'scancode22',
+      'd': 'scancode7', 'key_d': 'scancode7',
+      // Jump/Duck
+      'space': 'scancode44', 'spacebar': 'scancode44', 'key_space': 'scancode44',
+      'left ctrl': 'scancode224', 'left_control': 'scancode224', 'lctrl': 'scancode224', 'ctrl': 'scancode224',
+      // Walk
+      'left shift': 'scancode225', 'lshift': 'scancode225', 'shift': 'scancode225',
+      // Weapon & Action
+      '1': 'scancode2', 'key_1': 'scancode2',
+      '2': 'scancode3', 'key_2': 'scancode3',
+      '4': 'scancode33', 'key_4': 'scancode33',
+      '5': 'scancode34', 'key_5': 'scancode34',
+      'q': 'scancode20', 'key_q': 'scancode20',
+      'e': 'scancode8', 'key_e': 'scancode8',
+      'r': 'scancode21', 'key_r': 'scancode21',
+      'g': 'scancode10', 'key_g': 'scancode10',
+      // UI & Communication
+      'tab': 'scancode43', 'key_tab': 'scancode43',
+      'm': 'scancode16', 'key_m': 'scancode16',
+      't': 'scancode23', 'key_t': 'scancode23',
+      'y': 'scancode28', 'key_y': 'scancode28',
+      'u': 'scancode24', 'key_u': 'scancode24',
+      'f9': 'scancode66', 'key_f9': 'scancode66',
+      // Special characters
+      '^': 'scancode53', 'caret': 'scancode53', 'key_^': 'scancode53', 'key_caret': 'scancode53',
+    };
+    return map[normalized] ?? key;
+  };
+
   // Console color command (always first)
   const colorMap: Record<string, string> = {
     pink: 'FF25FFFF',
@@ -58,47 +96,47 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   content.push(formatCommand('bind mouse_y', 'pitch', 'Bind vertical mouse movement to pitch'));
   content.push('');
 
-  // Game Settings (moved below bind mouse_y)
-  const gameLines: string[] = [];
-  if (shouldInclude('r_show_build_info')) gameLines.push(formatCommand('r_show_build_info', formData.r_show_build_info ?? defaultAutoexecValues.r_show_build_info, 'Show build info overlay'));
-  if (shouldInclude('cl_allow_animated_avatars')) gameLines.push(formatCommand('cl_allow_animated_avatars', formData.cl_allow_animated_avatars ?? defaultAutoexecValues.cl_allow_animated_avatars, 'Allow animated avatars'));
-  if (shouldInclude('cl_teamcounter_playercount_instead_of_avatars')) gameLines.push(formatCommand('cl_teamcounter_playercount_instead_of_avatars', formData.cl_teamcounter_playercount_instead_of_avatars ?? defaultAutoexecValues.cl_teamcounter_playercount_instead_of_avatars, 'Show player count instead of avatars in team counter'));
-  if (shouldInclude('fps_max')) gameLines.push(formatCommand('fps_max', formData.fps_max ?? defaultAutoexecValues.fps_max, 'Maximum FPS limit (0 = unlimited)'));
-  if (gameLines.length) {
-    // Removed header per user request
-    gameLines.forEach((l) => content.push(l));
-    content.push('');
-  }
+  // FPS Limit below bind mouse_y (per user request)
+  if (shouldInclude('fps_max')) content.push(formatCommand('fps_max', formData.fps_max ?? defaultAutoexecValues.fps_max, 'Maximum FPS limit (0 = unlimited)'));
 
-  // Damage Prediction (moved below bind mouse_y)
-  const dpLines: string[] = [];
-  if (shouldInclude('cl_predict_body_shot_fx')) dpLines.push(formatCommand('cl_predict_body_shot_fx', formData.cl_predict_body_shot_fx ?? defaultAutoexecValues.cl_predict_body_shot_fx, 'Body shot prediction FX'));
-  if (shouldInclude('cl_predict_head_shot_fx')) dpLines.push(formatCommand('cl_predict_head_shot_fx', formData.cl_predict_head_shot_fx ?? defaultAutoexecValues.cl_predict_head_shot_fx, 'Headshot prediction FX'));
-  if (shouldInclude('cl_predict_kill_ragdolls')) dpLines.push(formatCommand('cl_predict_kill_ragdolls', formData.cl_predict_kill_ragdolls ?? defaultAutoexecValues.cl_predict_kill_ragdolls, 'Kill ragdolls prediction FX'));
-  if (dpLines.length) {
-    dpLines.forEach((l) => content.push(l));
-    content.push('');
-  }
+  // Console Enable below FPS Limit
+  if (shouldInclude('con_enable')) content.push(formatCommand('con_enable', '1', 'Enable developer console'));
+
+  // Game & Damage Prediction moved under SETTINGS section
 
   // BINDS section header
   if (formData.includeSections?.binds) {
+    // Ensure one blank line above the BINDS banner
+    if (content.length && content[content.length - 1] !== '') content.push('');
     content.push('//====================//');
     content.push('//       BINDS        //');
     content.push('//====================//');
     content.push('');
     // Build binds from individual form fields if a consolidated 'binds' record is not provided
     const fieldToCommand: Record<string, string> = {
+      // Communication
       voice_bind: '+voicerecord',
       radio_bind: 'radio',
+      teammenu_bind: 'teammenu',
+      allchat_bind: 'messagemode',
+      teamchat_bind: 'messagemode2',
+      // Utility
       scoreboard_bind: '+showscores',
       drop_bind: 'drop',
       use_bind: '+use',
       reload_bind: '+reload',
+      // Movement
+      forward_bind: '+forward',
+      moveleft_bind: '+moveleft',
+      back_bind: '+back',
+      moveright_bind: '+moveright',
       jump_bind: '+jump',
       duck_bind: '+duck',
-      walk_bind: '+speed',
+      walk_bind: '+walk',
+      // Weapons & Equipment
       slot1_bind: 'slot1',
       slot2_bind: 'slot2',
+      slot2_bind_alt: 'slot2',
       slot3_bind: 'slot3',
       slot4_bind: 'slot4',
       slot5_bind: 'slot5',
@@ -108,31 +146,138 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
       slot9_bind: 'slot9',
       slot10_bind: 'slot10',
       buymenu_bind: 'buymenu',
+      // Quick Actions
       toggleconsole_bind: 'toggleconsole',
       cleardecals_bind: 'r_cleardecals',
       inspect_bind: '+lookatweapon',
     };
-    const inferredBinds: Record<string, string> = {};
-    Object.entries(fieldToCommand).forEach(([field, command]) => {
-      const key = (formData as any)[field];
-      if (key && key !== 'none' && key !== '') {
-        inferredBinds[command] = key;
+    // Movement group
+    const movementFields = [
+      'forward_bind',
+      'moveleft_bind',
+      'back_bind',
+      'moveright_bind',
+      'jump_bind',
+      'duck_bind',
+      'walk_bind',
+    ] as const;
+    // Weapons & Actions group (includes alternate quick switch for slot2)
+    const weaponsActionFields = [
+      'slot1_bind',
+      'slot2_bind',
+      'slot2_bind_alt',
+      'slot4_bind',
+      'slot5_bind',
+      'use_bind',
+      'reload_bind',
+      'drop_bind',
+    ] as const;
+
+    const descFromField = (field: string, key: string): string | undefined => {
+      const K = (key || '').toString().toUpperCase();
+      switch (field) {
+        // Movement
+        case 'forward_bind': return 'key to move forward';
+        case 'moveleft_bind': return 'key to strafe left';
+        case 'back_bind': return 'key to move backward';
+        case 'moveright_bind': return 'key to strafe right';
+        case 'jump_bind': return 'key to jump';
+        case 'duck_bind': return 'key to crouch';
+        case 'walk_bind': return 'key to walk (hold for +walk)';
+        // Weapons & Actions
+        case 'slot1_bind': return `${K} - Primary weapon`;
+        case 'slot2_bind': return `${K} - Secondary weapon`;
+        case 'slot2_bind_alt': return `${K} - Quick switch (alternative)`;
+        case 'slot4_bind': return `${K} - Grenades`;
+        case 'slot5_bind': return `${K} - Bomb`;
+        case 'use_bind': return `${K} - Use/defuse`;
+        case 'reload_bind': return `${K} - Reload`;
+        case 'drop_bind': return `${K} - Drop weapon`;
+        // UI & Communication
+        case 'scoreboard_bind': return `${K} - Scoreboard`;
+        case 'teammenu_bind': return `${K} - Team menu`;
+        case 'voice_bind': return `${K} - Voice chat`;
+        case 'allchat_bind': return `${K} - All chat`;
+        case 'teamchat_bind': return `${K} - Team chat`;
+        case 'toggleconsole_bind': return `${K} - Console (common bind)`;
+        default: return undefined;
       }
-    });
-    const bindsSource = (formData as any).binds ?? inferredBinds;
-    if (bindsSource && Object.keys(bindsSource).length > 0) {
+    };
+
+    // Emit movement binds (only if enabled)
+    if (formData.includeSections?.movementBinds) {
       content.push('    // MOVEMENT //');
-      Object.entries(bindsSource).forEach(([command, key]) => {
-        if (key && command) {
-          content.push(formatCommand(`bind "${key}"`, command));
+      movementFields.forEach((field) => {
+        const key = (formData as any)[field];
+        if (key && key !== 'none' && key !== '') {
+          const command = fieldToCommand[field];
+          content.push(
+            formatCommand(`bind "${toScancode(key)}"`, command, descFromField(field, key))
+          );
         }
       });
-    } else {
-      // Add example bind from template if no binds are configured
-      content.push('    // MOVEMENT //');
-      content.push(formatCommand('bind "key"', 'command', 'Example bind command'));
+      content.push('');
     }
-    content.push('');
+
+    // Emit weapons & actions binds (only if enabled)
+    if (formData.includeSections?.weaponsActionBinds) {
+      content.push('    // WEAPONS & ACTIONS //');
+      weaponsActionFields.forEach((field) => {
+        const key = (formData as any)[field];
+        if (key && key !== 'none' && key !== '') {
+          const command = fieldToCommand[field];
+          content.push(
+            formatCommand(`bind "${toScancode(key)}"`, command, descFromField(field, key))
+          );
+        }
+      });
+      content.push('');
+    }
+
+    // Emit UI & communication binds (only if enabled)
+    const uiCommFields = [
+      'scoreboard_bind',
+      'teammenu_bind',
+      'voice_bind',
+      'allchat_bind',
+      'teamchat_bind',
+      'toggleconsole_bind',
+    ] as const;
+    if (formData.includeSections?.uiCommBinds) {
+      content.push('    // UI & COMMUNICATION //');
+      uiCommFields.forEach((field) => {
+        const key = (formData as any)[field];
+        if (key && key !== 'none' && key !== '') {
+          const command = fieldToCommand[field];
+          content.push(
+            formatCommand(`bind "${toScancode(key)}"`, command, descFromField(field, key))
+          );
+        }
+      });
+      content.push('');
+    }
+
+    // Alias binds (bind +dropbomb moved under BINDS)
+    if (formData?.includeCommands?.alias_dropbomb) {
+      content.push('    // ALIAS BINDS //');
+      const bindKey = formData.dropbomb_bind ?? defaultAutoexecValues.dropbomb_bind;
+      content.push(
+        formatCommand(`bind "${toScancode(bindKey)}"`, '+dropbomb', 'Fast Bomb Drop')
+      );
+      content.push('');
+    }
+
+    // Crosshair toggle bind (conditional)
+    if (formData?.includeCommands?.alias_crosshair_toggle) {
+      if (!formData?.includeCommands?.alias_dropbomb) {
+        content.push('    // ALIAS BINDS //');
+      }
+      const crosshairBindKey = formData.crosshair_toggle_bind ?? defaultAutoexecValues.crosshair_toggle_bind;
+      content.push(
+        formatCommand(`bind "${toScancode(crosshairBindKey)}"`, 'toggle_crosshair_color', 'Toggle crosshair color')
+      );
+      content.push('');
+    }
 
     // Custom binds (only if explicitly enabled)
     if (formData.includeSections?.customBinds) {
@@ -141,7 +286,7 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
       if (formData.customBinds && formData.customBinds.length > 0) {
         formData.customBinds.forEach((bind: {key: string, command: string}) => {
           if (bind.key && bind.command) {
-            content.push(formatCommand(`bind "${bind.key}"`, bind.command));
+            content.push(formatCommand(`bind "${toScancode(bind.key)}"`, bind.command, 'custom bind'));
           }
         });
       }
@@ -155,23 +300,52 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
     content.push('//      ALIASES       //');
     content.push('//====================//');
     content.push('');
-    content.push('    // CROSSHAIR //');
-    content.push(formatCommand('alias "toggle_crosshair_color"', 'toggle cl_crosshaircolor_b 0 255', 'Toggle crosshair color between blue and green'));
-    content.push('');
+
+    // Fast Bomb Drop (optional)
+    if (formData?.includeCommands?.alias_dropbomb) {
+      content.push('    // FAST BOMB DROP //');
+      content.push(
+        formatCommand('alias "+dropbomb"', 'slot3; slot5;', 'Fast Bomb Drop — press: select knife & bomb')
+      );
+      content.push(
+        formatCommand('alias "-dropbomb"', 'drop; slot1;', 'Fast Bomb Drop — release: drop bomb, return to primary')
+      );
+      // Bind moved to BINDS section
+      content.push('');
+    }
+
+    // Crosshair toggle alias (conditional)
+    if (formData?.includeCommands?.alias_crosshair_toggle) {
+      content.push('    // CROSSHAIR //');
+      content.push('alias "toggle_crosshair_color" "cl_crosshaircolor_r 255; cl_crosshaircolor_g 255; toggle cl_crosshaircolor_b 0 255"');
+      content.push('');
+    }
   }
 
   // SETTINGS section (conditional with per-setting checkboxes)
   if (formData.includeSections?.settings) {
+    // Ensure one blank line above the SETTINGS banner
+    if (content.length && content[content.length - 1] !== '') content.push('');
     content.push('//====================//');
     content.push('//       SETTINGS     //');
     content.push('//====================//');
     content.push('');
 
-    // FPS Settings (optional)
-    if (formData.includeSections?.fpsMax) {
-      content.push(formatCommand('fps_max', formData.fps_max || '0', 'Maximum FPS limit (0 = unlimited)'));
+    // GAME SETTINGS (immediately under SETTINGS header)
+    const gameSettingsLines: string[] = [];
+    if (shouldInclude('r_show_build_info')) gameSettingsLines.push(formatCommand('r_show_build_info', formData.r_show_build_info ?? defaultAutoexecValues.r_show_build_info, 'Show build info overlay'));
+    if (shouldInclude('cl_allow_animated_avatars')) gameSettingsLines.push(formatCommand('cl_allow_animated_avatars', formData.cl_allow_animated_avatars ?? defaultAutoexecValues.cl_allow_animated_avatars, 'Allow animated avatars'));
+    if (shouldInclude('cl_teamcounter_playercount_instead_of_avatars')) gameSettingsLines.push(formatCommand('cl_teamcounter_playercount_instead_of_avatars', formData.cl_teamcounter_playercount_instead_of_avatars ?? defaultAutoexecValues.cl_teamcounter_playercount_instead_of_avatars, 'Show player count instead of avatars in team counter'));
+    if (shouldInclude('cl_predict_body_shot_fx')) gameSettingsLines.push(formatCommand('cl_predict_body_shot_fx', formData.cl_predict_body_shot_fx ?? defaultAutoexecValues.cl_predict_body_shot_fx, 'Body shot prediction FX'));
+    if (shouldInclude('cl_predict_head_shot_fx')) gameSettingsLines.push(formatCommand('cl_predict_head_shot_fx', formData.cl_predict_head_shot_fx ?? defaultAutoexecValues.cl_predict_head_shot_fx, 'Headshot prediction FX'));
+    if (shouldInclude('cl_predict_kill_ragdolls')) gameSettingsLines.push(formatCommand('cl_predict_kill_ragdolls', formData.cl_predict_kill_ragdolls ?? defaultAutoexecValues.cl_predict_kill_ragdolls, 'Kill ragdolls prediction FX'));
+    if (gameSettingsLines.length) {
+      content.push('    // GAME //');
+      gameSettingsLines.forEach((l) => content.push(l));
       content.push('');
     }
+
+    // FPS Settings moved above SETTINGS as requested
 
     // HUD SETTINGS
     const hudLines: string[] = [];
@@ -341,6 +515,9 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |');
   content.push('echo |                                             [ SYSTEM OPTIMIZED ]');
   content.push('echo |                                           [ ALL SYSTEMS LAUNCHED ]');
@@ -455,29 +632,46 @@ export const defaultAutoexecValues = {
   cl_teamcounter_playercount_instead_of_avatars: "0",
   
   // Binds defaults
-  voice_bind: "",
+  // Communication
+  voice_bind: "T",
   radio_bind: "",
-  scoreboard_bind: "",
-  drop_bind: "",
-  use_bind: "",
-  reload_bind: "",
-  jump_bind: "",
-  duck_bind: "",
-  walk_bind: "",
-  slot1_bind: "",
-  slot2_bind: "",
+  teammenu_bind: "M",
+  allchat_bind: "Y",
+  teamchat_bind: "U",
+  // Utility
+  scoreboard_bind: "TAB",
+  drop_bind: "G",
+  use_bind: "E",
+  reload_bind: "R",
+  // Movement keys (user-friendly defaults; converted to scancodes in output)
+  forward_bind: "W",
+  moveleft_bind: "A",
+  back_bind: "S",
+  moveright_bind: "D",
+  jump_bind: "SPACE",
+  duck_bind: "LEFT CTRL",
+  walk_bind: "LEFT SHIFT",
+  // Weapons & Equipment
+  slot1_bind: "1",
+  slot2_bind: "2",
+  slot2_bind_alt: "Q",
   slot3_bind: "",
-  slot4_bind: "",
-  slot5_bind: "",
+  slot4_bind: "4",
+  slot5_bind: "5",
   slot6_bind: "",
   slot7_bind: "",
   slot8_bind: "",
   slot9_bind: "",
   slot10_bind: "",
   buymenu_bind: "",
-  toggleconsole_bind: "",
+  // Quick Actions
+  toggleconsole_bind: "F9",
   cleardecals_bind: "",
   inspect_bind: "",
+  
+  // Alias Binds
+  dropbomb_bind: "^",
+  crosshair_toggle_bind: "LEFTARROW",
   
   additionalCommands: "",
   customBinds: [],

@@ -1,7 +1,6 @@
 'use client'
 
 import { useFormContext } from 'react-hook-form'
-import { OptionRow } from '../option-row'
 import type { AutoexecFormValues } from '@/lib/schema'
 import { useEffect, useRef, useState } from 'react'
 import * as Collapsible from '@radix-ui/react-collapsible'
@@ -58,7 +57,7 @@ function SettingRow({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center gap-2 text-white text-sm flex-nowrap">
+      <div className="flex items-center gap-2 text-white text-sm">
         <input
           type="checkbox"
           className="h-4 w-4 accent-yellow-400"
@@ -99,6 +98,25 @@ function SettingRow({
   )
 }
 
+// Simple text input row for bind fields
+function BindRow({ name, label, placeholder, description }: { name: keyof AutoexecFormValues; label: string; placeholder?: string; description?: string }) {
+  const { register } = useFormContext<AutoexecFormValues>()
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 text-white text-sm">
+        <span className="w-44 whitespace-nowrap">{label}</span>
+        <input
+          type="text"
+          placeholder={placeholder}
+          {...register(name as any)}
+          className="flex-1 bg-[#282E22] border border-[#889180] text-white rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      {description && <p className="text-xs text-gray-300">{description}</p>}
+    </div>
+  )
+}
+
 // Add a generic "Select All" checkbox that can control multiple form fields
 function SelectAllCheckbox({ label, fieldPaths }: { label: string; fieldPaths: string[] }) {
   const { watch, setValue } = useFormContext<AutoexecFormValues>()
@@ -127,6 +145,22 @@ function SelectAllCheckbox({ label, fieldPaths }: { label: string; fieldPaths: s
         onChange={onChange}
       />
       <span>{label}</span>
+    </label>
+  )
+}
+
+// Lightweight inline section switch for includeSections toggles
+function SectionSwitch({ name, ariaLabel }: { name: keyof AutoexecFormValues['includeSections']; ariaLabel?: string }) {
+  const { register } = useFormContext<AutoexecFormValues>()
+  return (
+    <label className="inline-flex items-center gap-2 text-white text-xs">
+      <span className="sr-only">{ariaLabel ?? String(name)}</span>
+      <input
+        type="checkbox"
+        className="h-4 w-4 accent-yellow-400"
+        {...register(`includeSections.${name}` as const)}
+        aria-label={ariaLabel ?? String(name)}
+      />
     </label>
   )
 }
@@ -179,6 +213,16 @@ const NETWORK_KEYS = [
   'mm_dedicated_search_maxping',
   'rate',
 ]
+// Add Game Settings keys (including Damage Prediction)
+const GAME_KEYS = [
+  'r_show_build_info',
+  'cl_allow_animated_avatars',
+  'cl_teamcounter_playercount_instead_of_avatars',
+  // Removed 'fps_max' from Game Settings keys to make it independent
+  'cl_predict_body_shot_fx',
+  'cl_predict_head_shot_fx',
+  'cl_predict_kill_ragdolls',
+]
 
 export function IncludeOptionsSection() {
   const { watch, register, setValue } = useFormContext<AutoexecFormValues>()
@@ -190,11 +234,53 @@ export function IncludeOptionsSection() {
   const viewmodelOn = watch('includeSections.viewmodel')
   const audioOn = watch('includeSections.sound')
   const networkOn = watch('includeSections.rate')
+  const gameSettingsOn = watch('includeSections.gameSettings')
+  const bindsOn = watch('includeSections.binds')
+  const aliasesOn = watch('includeSections.aliases')
+  // New per-binds section toggles
+  const movementBindsOn = watch('includeSections.movementBinds')
+  const weaponsActionBindsOn = watch('includeSections.weaponsActionBinds')
+  const uiCommBindsOn = watch('includeSections.uiCommBinds')
+  // Alias checkboxes (includeCommands)
+  const aliasDropbombOn = watch('includeCommands.alias_dropbomb')
+  const aliasCrosshairToggleOn = watch('includeCommands.alias_crosshair_toggle')
+
+  // Derive parent toggles implicitly from sub-sections
+  useEffect(() => {
+    const derivedBindsOn = Boolean(movementBindsOn || weaponsActionBindsOn || uiCommBindsOn || aliasDropbombOn || aliasCrosshairToggleOn)
+    setValue('includeSections.binds', derivedBindsOn)
+  }, [movementBindsOn, weaponsActionBindsOn, uiCommBindsOn, aliasDropbombOn, aliasCrosshairToggleOn])
+
+  // Ensure alias bind displays real key (not scancode) in UI
+  useEffect(() => {
+    const v = watch('dropbomb_bind' as any) as string | undefined
+    if (typeof v === 'string' && v.toLowerCase().startsWith('scancode')) {
+      setValue('dropbomb_bind' as any, '^')
+    }
+  }, [aliasDropbombOn, aliasCrosshairToggleOn])
+
+  useEffect(() => {
+    const derivedSettingsOn = Boolean(
+      hudOn || crosshairOn || viewmodelOn || audioOn || networkOn || gameSettingsOn
+    )
+    setValue('includeSections.settings', derivedSettingsOn)
+  }, [hudOn, crosshairOn, viewmodelOn, audioOn, networkOn, gameSettingsOn])
+
+  useEffect(() => {
+    const derivedAliasesOn = Boolean(aliasDropbombOn || aliasCrosshairToggleOn)
+    setValue('includeSections.aliases', derivedAliasesOn)
+  }, [aliasDropbombOn, aliasCrosshairToggleOn])
 
   // Panels open state
-  const [bindsOpen, setBindsOpen] = useState(true)
-  const [aliasesOpen, setAliasesOpen] = useState(true)
-  const [settingsOpen, setSettingsOpen] = useState(true)
+  const [bindsOpen, setBindsOpen] = useState(false)
+  const [aliasesOpen, setAliasesOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Ensure FPS limit command is always included in output
+  useEffect(() => {
+    const v = watch('includeCommands.fps_max' as any)
+    if (v === undefined) setValue('includeCommands.fps_max' as any, true)
+  }, [])
 
   // Initialize includeCommands when subcategories are enabled
   useEffect(() => {
@@ -203,7 +289,14 @@ export function IncludeOptionsSection() {
     }
 
     if (!settingsOn) {
-      setKeys([...HUD_KEYS, ...CROSSHAIR_KEYS, ...VIEWMODEL_KEYS, ...AUDIO_KEYS, ...NETWORK_KEYS], false)
+      setKeys([
+        ...HUD_KEYS,
+        ...CROSSHAIR_KEYS,
+        ...VIEWMODEL_KEYS,
+        ...AUDIO_KEYS,
+        ...NETWORK_KEYS,
+        ...GAME_KEYS,
+      ], false)
       return
     }
     if (hudOn) {
@@ -246,13 +339,22 @@ export function IncludeOptionsSection() {
     } else {
       setKeys(NETWORK_KEYS, false)
     }
-  }, [settingsOn, hudOn, crosshairOn, viewmodelOn, audioOn, networkOn])
+    if (gameSettingsOn) {
+      GAME_KEYS.forEach((k) => {
+        const v = watch(`includeCommands.${k}` as any)
+        if (v === undefined) setValue(`includeCommands.${k}` as any, true)
+      })
+    } else {
+      setKeys(GAME_KEYS, false)
+    }
+  }, [settingsOn, hudOn, crosshairOn, viewmodelOn, audioOn, networkOn, gameSettingsOn])
 
   // Minimal UI while we validate parsing
   return (
     <div className="bg-[#3E4637] p-6 rounded-lg mb-8 md:mb-12 text-white">
-      <h2 className="bg-[#111111] text-white px-4 py-2 rounded font-ui text-lg mb-4">Include in Autoexec</h2>
+      <div className="text-white px-4 py-2 mb-4">Choose which settings to include in your autoexec. Your final autoexec file will only include the options you check below.</div>
 
+      {/* Console Color (always visible) */}
       <div className="mb-4">
         <h3 className="text-white font-semibold mb-2 text-sm font-ui">Console Color</h3>
         <select
@@ -269,44 +371,10 @@ export function IncludeOptionsSection() {
         </select>
       </div>
 
-
-      {/* Game Settings */}
+      {/* FPS Limit (always visible, above all panels) */}
       <div className="mb-4">
-        <h3 className="text-white font-semibold mb-2 text-sm font-ui">Game Settings</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <SettingRow
-            name="r_show_build_info"
-            label="Show build info overlay"
-            description="Displays build/version info overlay in-game. 0 = Off, 1 = On. Default is 0."
-            type="select"
-            options={[
-              { value: '0', label: 'Off' },
-              { value: '1', label: 'On' },
-            ]}
-            defaultValue="0"
-          />
-          <SettingRow
-            name="cl_allow_animated_avatars"
-            label="Allow animated avatars"
-            description="Enable/disable animated avatars in UI. 0 = Off, 1 = On. Default is 1."
-            type="select"
-            options={[
-              { value: '0', label: 'Off' },
-              { value: '1', label: 'On' },
-            ]}
-            defaultValue="1"
-          />
-          <SettingRow
-            name="cl_teamcounter_playercount_instead_of_avatars"
-            label="Team counter: show player count"
-            description="Show player count instead of avatars in team counter. 0 = Avatars, 1 = Player count. Default is 0."
-            type="select"
-            options={[
-              { value: '0', label: 'Avatars' },
-              { value: '1', label: 'Player count' },
-            ]}
-            defaultValue="0"
-          />
+        <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+          <h4 className="text-white font-semibold text-sm font-ui">FPS Limit</h4>
           <SettingRow
             name="fps_max"
             label="Max FPS (fps_max)"
@@ -319,555 +387,704 @@ export function IncludeOptionsSection() {
         </div>
       </div>
 
-      {/* Damage Prediction settings */}
+      {/* Console Enable (always visible, below FPS Limit) */}
       <div className="mb-4">
-        <h3 className="text-white font-semibold mb-2 text-sm font-ui">Damage Prediction</h3>
-        <div className="space-y-3">
-          <SettingRow
-            name="cl_predict_body_shot_fx"
-            label="Body shot FX"
-            description="Enable/disable predicted body shot effect. 1 = On, 2 = Off. Default is 2."
-            type="select"
-            options={[
-              { value: '1', label: 'On' },
-              { value: '2', label: 'Off' },
-            ]}
-            defaultValue="2"
-          />
-          <SettingRow
-            name="cl_predict_head_shot_fx"
-            label="Headshot FX"
-            description="Enable/disable predicted headshot effect. 1 = On, 2 = Off. Default is 2."
-            type="select"
-            options={[
-              { value: '1', label: 'On' },
-              { value: '2', label: 'Off' },
-            ]}
-            defaultValue="2"
-          />
-          <SettingRow
-            name="cl_predict_kill_ragdolls"
-            label="Kill ragdolls"
-            description="Enable/disable predicted kill ragdolls. 1 = On, 2 = Off. Default is 1."
-            type="select"
-            options={[
-              { value: '1', label: 'On' },
-              { value: '2', label: 'Off' },
-            ]}
-            defaultValue="1"
-          />
+        <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-white font-semibold text-sm font-ui">Console</h4>
+            <SectionSwitch name="con_enable" ariaLabel="Enable console" />
+          </div>
+          <p className="text-xs text-gray-300">Enable the developer console. Allows access to advanced commands and debugging.</p>
         </div>
       </div>
 
+      {/* Key Bindings Panel */}
       <div className="mb-4">
         <Collapsible.Root open={bindsOpen} onOpenChange={setBindsOpen}>
           <Collapsible.Trigger asChild>
             <button type="button" className="collapsible-trigger">
-              <span className="text-white font-semibold font-ui text-sm">Key Bindings</span>
+              <span className="text-white font-semibold font-ui text-sm">KEY BINDINGS - Custom Key Bindings</span>
               <ChevronDown className={`h-4 w-4 transition-transform ${bindsOpen ? 'rotate-180' : 'rotate-0'}`} />
             </button>
           </Collapsible.Trigger>
-          <Collapsible.Content>
-            <div className="text-xs text-gray-300 py-2">Panel content will return after parser fix.</div>
-          </Collapsible.Content>
-        </Collapsible.Root>
-      </div>
-
-      <div className="mb-4">
-        <Collapsible.Root open={aliasesOpen} onOpenChange={setAliasesOpen}>
-          <Collapsible.Trigger asChild>
-            <button type="button" className="collapsible-trigger">
-              <span className="text-white font-semibold font-ui text-sm">Aliases</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${aliasesOpen ? 'rotate-180' : 'rotate-0'}`} />
-            </button>
-          </Collapsible.Trigger>
-          <Collapsible.Content>
-            <div className="text-xs text-gray-300 py-2">Panel content will return after parser fix.</div>
-          </Collapsible.Content>
-        </Collapsible.Root>
-      </div>
-
-      <div className="mb-4">
-        <Collapsible.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
-          <Collapsible.Trigger asChild>
-            <button type="button" className="collapsible-trigger">
-              <span className="text-white font-semibold font-ui text-sm">Settings & Subcategories</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : 'rotate-0'}`} />
-            </button>
-          </Collapsible.Trigger>
+          <div className="text-gray-300 text-xs mt-1 px-2">Assign any in-game action to any key you want.</div>
           <Collapsible.Content>
             <div className="space-y-3 py-2">
-              <OptionRow name="settings" label="Enable Settings" description="Include game settings" className="option-card" />
-              {settingsOn ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-5 gap-3">
-                    <OptionRow name="hud" label="HUD" description="HUD options" className="bg-[#111111] hover:bg-[#111111]" />
-                    <OptionRow name="mouseCrosshair" label="CROSSHAIR & SENSITIVITY" description="Crosshair & sensitivity options" className="bg-[#111111] hover:bg-[#111111]" />
-                    <OptionRow name="viewmodel" label="VIEWMODEL" description="Viewmodel options" className="bg-[#111111] hover:bg-[#111111]" />
-                    <OptionRow name="sound" label="AUDIO" description="Audio options" className="bg-[#111111] hover:bg-[#111111]" />
-                    <OptionRow name="rate" label="NETWORK" description="Network options" className="bg-[#111111] hover:bg-[#111111]" />
-                  </div>
-
-                  {hudOn && (
-                    <div className="bg-[#2A2F26] border border-[#889180] rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-white font-semibold text-sm font-ui">HUD</h4>
-                        <SelectAllCheckbox label="Select all" fieldPaths={HUD_KEYS.map((k) => `includeCommands.${k}`)} />
-                      </div>
-                      <div className="space-y-3">
-                        <SettingRow
-                          name="cl_use_weapon_rarity_as_selection_color"
-                          label="Use weapon rarity colors"
-                          description="Colors selection UI based on weapon rarity. 0 = Off, 1 = On. Default is 1."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="cl_hud_color"
-                          label="HUD Color"
-                          description="Changes HUD color scheme. Default is 0 (Default). Allowed values: 0–10."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Default' },
-                            { value: '1', label: 'White' },
-                            { value: '2', label: 'Light blue' },
-                            { value: '3', label: 'Dark blue' },
-                            { value: '4', label: 'Purple' },
-                            { value: '5', label: 'Red' },
-                            { value: '6', label: 'Orange' },
-                            { value: '7', label: 'Yellow' },
-                            { value: '8', label: 'Green' },
-                            { value: '9', label: 'Aqua' },
-                            { value: '10', label: 'Pink' },
-                          ]}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="cl_radar_rotate"
-                          label="Rotate radar with player"
-                          description="Rotates the radar based on player view direction. 0 = Fixed north, 1 = Rotate with view. Default is 1."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="cl_hud_radar_scale"
-                          label="HUD radar scale"
-                          description="Controls radar size within the HUD. Range 0.8–1.3. Default is 1.0."
-                          type="number"
-                          min={0.8}
-                          max={1.3}
-                          step={0.01}
-                          defaultValue="1.0"
-                        />
-                        <SettingRow
-                          name="hud_scaling"
-                          label="HUD scaling"
-                          description="Scale the size of the HUD. Range 0.5–0.95. Default is 0.85."
-                          type="number"
-                          min={0.5}
-                          max={0.95}
-                          step={0.01}
-                          defaultValue="0.85"
-                        />
-                        <SettingRow
-                          name="cl_show_team_equipment"
-                          label="Show teammate equipment"
-                          description="Shows teammate equipment above their heads (through walls). 0 = Off, 1 = On. Default is 1."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="r_drawtracers_firstperson"
-                          label="First-person bullet tracers"
-                          description="Shows bullet tracers in first-person view. 0 = Off, 1 = On. Default is 1."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {crosshairOn && (
-                    <div className="bg-[#2A2F26] border border-[#889180] rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-white font-semibold text-sm font-ui">Crosshair & Sensitivity</h4>
-                        <SelectAllCheckbox label="Select all" fieldPaths={CROSSHAIR_KEYS.map((k) => `includeCommands.${k}`)} />
-                      </div>
-                      <div className="space-y-3">
-                        <SettingRow
-                          name="cl_crosshairalpha"
-                          label="Crosshair alpha"
-                          description="Opacity of the crosshair. Range 0–255."
-                          type="number"
-                          min={0}
-                          max={255}
-                          step={1}
-                          defaultValue="255"
-                        />
-                        <SettingRow
-                          name="cl_crosshair_t"
-                          label="T-style crosshair"
-                          description="Use T-shaped crosshair (no top line). 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="cl_crosshairgap_useweaponvalue"
-                          label="Use weapon-specific gap"
-                          description="Use weapon-specific gap value for the crosshair. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="cl_crosshaircolor_r"
-                          label="Crosshair color R"
-                          description="Red channel of crosshair color. Range 0–255."
-                          type="number"
-                          min={0}
-                          max={255}
-                          step={1}
-                          defaultValue="255"
-                        />
-                        <SettingRow
-                          name="cl_crosshaircolor_g"
-                          label="Crosshair color G"
-                          description="Green channel of crosshair color. Range 0–255."
-                          type="number"
-                          min={0}
-                          max={255}
-                          step={1}
-                          defaultValue="255"
-                        />
-                        <SettingRow
-                          name="cl_crosshaircolor_b"
-                          label="Crosshair color B"
-                          description="Blue channel of crosshair color. Range 0–255."
-                          type="number"
-                          min={0}
-                          max={255}
-                          step={1}
-                          defaultValue="255"
-                        />
-                        <SettingRow
-                          name="sensitivity"
-                          label="Mouse sensitivity"
-                          description="Base mouse sensitivity. Typical range 0.5–4.0."
-                          type="number"
-                          min={0.1}
-                          max={10}
-                          step={0.01}
-                          defaultValue="1.00"
-                        />
-                        <SettingRow
-                          name="zoom_sensitivity_ratio_mouse"
-                          label="Zoom sensitivity ratio"
-                          description="Sensitivity multiplier while scoped. Range 0.2–2.0."
-                          type="number"
-                          min={0.2}
-                          max={2}
-                          step={0.01}
-                          defaultValue="1.00"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {viewmodelOn && (
-                    <div className="bg-[#2A2F26] border border-[#889180] rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-white font-semibold text-sm font-ui">Viewmodel</h4>
-                        <SelectAllCheckbox label="Select all" fieldPaths={VIEWMODEL_KEYS.map((k) => `includeCommands.${k}`)} />
-                      </div>
-                      <div className="space-y-3">
-                        <SettingRow
-                          name="viewmodel_fov"
-                          label="Viewmodel FOV"
-                          description="Field of view for weapons. Range 54–68."
-                          type="number"
-                          min={54}
-                          max={68}
-                          step={1}
-                          defaultValue="62"
-                        />
-                        <SettingRow
-                          name="viewmodel_offset_x"
-                          label="Viewmodel offset X"
-                          description="Horizontal offset. Range −2.5–2.5."
-                          type="number"
-                          min={-2.5}
-                          max={2.5}
-                          step={0.1}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="viewmodel_offset_y"
-                          label="Viewmodel offset Y"
-                          description="Forward/back offset. Range −2.5–2.5."
-                          type="number"
-                          min={-2.5}
-                          max={2.5}
-                          step={0.1}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="viewmodel_offset_z"
-                          label="Viewmodel offset Z"
-                          description="Vertical offset. Range −2.5–2.5."
-                          type="number"
-                          min={-2.5}
-                          max={2.5}
-                          step={0.1}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="viewmodel_presetpos"
-                          label="Viewmodel preset"
-                          description="Preset positions for the viewmodel."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'None/Custom' },
-                            { value: '1', label: 'Preset 1' },
-                            { value: '2', label: 'Preset 2' },
-                            { value: '3', label: 'Preset 3' },
-                          ]}
-                          defaultValue="0"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-
-                  {audioOn && (
-                    <div className="bg-[#2A2F26] border border-[#889180] rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-white font-semibold text-sm font-ui">Audio</h4>
-                        <SelectAllCheckbox label="Select all" fieldPaths={AUDIO_KEYS.map((k) => `includeCommands.${k}`)} />
-                      </div>
-                      <div className="space-y-3">
-                        <SettingRow
-                          name="volume"
-                          label="Master volume"
-                          description="Overall game volume. Range 0.0–1.0."
-                          type="number"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          defaultValue="0.50"
-                        />
-                        <SettingRow
-                          name="snd_headphone_eq"
-                          label="Headphone EQ"
-                          description="Headphone equalization preset. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="snd_mixahead"
-                          label="Audio mixahead"
-                          description="Audio buffer size in seconds. Lower = lower latency. Typical 0.05–0.10."
-                          type="number"
-                          min={0.02}
-                          max={0.2}
-                          step={0.01}
-                          defaultValue="0.05"
-                        />
-                        <SettingRow
-                          name="snd_spatialize_lerp"
-                          label="Spatialize lerp"
-                          description="Blending amount for spatialization. Range 0.0–1.0."
-                          type="number"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          defaultValue="0.50"
-                        />
-                        <SettingRow
-                          name="snd_menumusic_volume"
-                          label="Menu music volume"
-                          description="Menu music volume. Range 0.0–1.0."
-                          type="number"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          defaultValue="0.00"
-                        />
-                        <SettingRow
-                          name="snd_mute_mvp_music_live_players"
-                          label="Mute MVP music for living players"
-                          description="Mutes MVP music while alive. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="snd_autodetect_latency"
-                          label="Autodetect audio latency"
-                          description="Let the game detect audio latency automatically. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {networkOn && (
-                    <div className="bg-[#2A2F26] border border-[#889180] rounded p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-white font-semibold text-sm font-ui">Network</h4>
-                        <SelectAllCheckbox label="Select all" fieldPaths={NETWORK_KEYS.map((k) => `includeCommands.${k}`)} />
-                      </div>
-                      <div className="space-y-3">
-                        <SettingRow
-                          name="cl_invites_only_friends"
-                          label="Invites only from friends"
-                          description="Only allow invites from friends. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="cl_invites_only_mainmenu"
-                          label="Only allow invites from main menu"
-                          description="Only allow invites when in main menu. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="0"
-                        />
-                        <SettingRow
-                          name="cl_join_advertise"
-                          label="Advertise lobbies"
-                          description="Advertise your lobbies to friends. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="cl_clock_correction"
-                          label="Clock correction"
-                          description="Network clock correction. 0 = Off, 1 = On."
-                          type="select"
-                          options={[
-                            { value: '0', label: 'Off' },
-                            { value: '1', label: 'On' },
-                          ]}
-                          defaultValue="1"
-                        />
-                        <SettingRow
-                          name="cl_interp_ratio"
-                          label="Interp ratio"
-                          description="Interpolation ratio. Typical 1–2."
-                          type="number"
-                          min={1}
-                          max={3}
-                          step={0.1}
-                          defaultValue="2"
-                        />
-                        <SettingRow
-                          name="cl_interp"
-                          label="Interp"
-                          description="Interpolation amount in seconds. Typical 0.031."
-                          type="number"
-                          min={0.01}
-                          max={0.1}
-                          step={0.001}
-                          defaultValue="0.031"
-                        />
-                        <SettingRow
-                          name="cl_updaterate"
-                          label="Update rate"
-                          description="Server update rate (Hz). 64–128."
-                          type="number"
-                          min={32}
-                          max={128}
-                          step={1}
-                          defaultValue="128"
-                        />
-                        <SettingRow
-                          name="cl_cmdrate"
-                          label="Client command rate"
-                          description="Client command rate (Hz). 64–128."
-                          type="number"
-                          min={32}
-                          max={128}
-                          step={1}
-                          defaultValue="128"
-                        />
-                        <SettingRow
-                          name="mm_dedicated_search_maxping"
-                          label="Matchmaking max ping"
-                          description="Maximum acceptable ping in ms."
-                          type="number"
-                          min={30}
-                          max={300}
-                          step={1}
-                          defaultValue="80"
-                        />
-                        <SettingRow
-                          name="rate"
-                          label="Network rate"
-                          description="Max bytes per second. Typical 196608–786432."
-                          type="number"
-                          min={196608}
-                          max={786432}
-                          step={1024}
-                          defaultValue="786432"
-                        />
-                      </div>
-                    </div>
-                  )}
-
+              {/* Movement Binds */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Movement Binds</h4>
+                  <SectionSwitch name="movementBinds" ariaLabel="Enable Movement binds" />
                 </div>
-              ) : (
-                <p className="text-xs text-gray-300 py-2">Enable Settings to configure subcategories.</p>
+                {movementBindsOn && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <BindRow name="forward_bind" label="Forward (+forward)" placeholder="W" description="Key to move forward" />
+                    <BindRow name="moveleft_bind" label="Strafe Left (+moveleft)" placeholder="A" description="Key to strafe left" />
+                    <BindRow name="back_bind" label="Backward (+back)" placeholder="S" description="Key to move backward" />
+                    <BindRow name="moveright_bind" label="Strafe Right (+moveright)" placeholder="D" description="Key to strafe right" />
+                    <BindRow name="jump_bind" label="Jump (+jump)" placeholder="SPACE" description="Key to jump" />
+                    <BindRow name="duck_bind" label="Crouch (+duck)" placeholder="LEFT CTRL" description="Key to crouch" />
+                    <BindRow name="walk_bind" label="Walk (+walk)" placeholder="LEFT SHIFT" description="Key to walk (hold for +walk)" />
+                  </div>
+                )}
+              </div>
+
+              {/* Weapons & Actions Binds */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Weapons & Actions</h4>
+                  <SectionSwitch name="weaponsActionBinds" ariaLabel="Enable Weapons & Actions binds" />
+                </div>
+                {weaponsActionBindsOn && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <BindRow name="slot1_bind" label="Primary (slot1)" placeholder="1" description="Select primary weapon" />
+                    <BindRow name="slot2_bind" label="Secondary (slot2)" placeholder="2" description="Select secondary weapon" />
+                    <BindRow name="slot2_bind_alt" label="Quick Switch (slot2 alt)" placeholder="Q" description="Alternative quick switch to secondary" />
+                    <BindRow name="slot4_bind" label="Grenades (slot4)" placeholder="4" description="Grenades" />
+                    <BindRow name="slot5_bind" label="Bomb (slot5)" placeholder="5" description="Bomb" />
+                    <BindRow name="use_bind" label="Use (+use)" placeholder="E" description="Use/defuse" />
+                    <BindRow name="reload_bind" label="Reload (+reload)" placeholder="R" description="Reload weapon" />
+                    <BindRow name="drop_bind" label="Drop (drop)" placeholder="G" description="Drop weapon" />
+                  </div>
+                )}
+              </div>
+
+              {/* UI & Communication Binds */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">UI & Communication</h4>
+                  <SectionSwitch name="uiCommBinds" ariaLabel="Enable UI & Communication binds" />
+                </div>
+                {uiCommBindsOn && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <BindRow name="scoreboard_bind" label="Scoreboard (+showscores)" placeholder="TAB" description="Open scoreboard" />
+                    <BindRow name="teammenu_bind" label="Team Menu (teammenu)" placeholder="M" description="Open team menu" />
+                    <BindRow name="voice_bind" label="Voice (+voicerecord)" placeholder="T" description="Push-to-talk" />
+                    <BindRow name="allchat_bind" label="All Chat (messagemode)" placeholder="Y" description="Open all chat" />
+                    <BindRow name="teamchat_bind" label="Team Chat (messagemode2)" placeholder="U" description="Open team chat" />
+                    <BindRow name="toggleconsole_bind" label="Toggle Console" placeholder="F9" description="Toggle developer console" />
+                  </div>
+                )}
+              </div>
+
+              {/* Alias Binds — shown only if alias enabled */}
+              {aliasDropbombOn && (
+                <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                  <h4 className="text-white font-semibold text-sm font-ui">Alias Binds</h4>
+                  <div className="space-y-2">
+                    <BindRow name="dropbomb_bind" label="Fast Bomb Drop key" placeholder="^" description="Key used to trigger +dropbomb alias" />
+                    <p className="text-xs text-gray-300">Enable the alias under the Aliases panel to include its commands in output.</p>
+                  </div>
+                </div>
+              )}
+
+              {aliasCrosshairToggleOn && (
+                <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                  <h4 className="text-white font-semibold text-sm font-ui">Crosshair Toggle Bind</h4>
+                  <div className="space-y-2">
+                    <BindRow name="crosshair_toggle_bind" label="Toggle Crosshair Color key" placeholder="LEFTARROW" description="Key used to trigger toggle_crosshair_color alias" />
+                    <p className="text-xs text-gray-300">Enable the alias under the Aliases panel to include its commands in output.</p>
+                  </div>
+                </div>
               )}
             </div>
           </Collapsible.Content>
         </Collapsible.Root>
       </div>
-    </div>
+
+      {/* Aliases Panel */}
+      <div className="mb-4">
+        <Collapsible.Root open={aliasesOpen} onOpenChange={setAliasesOpen}>
+          <Collapsible.Trigger asChild>
+            <button type="button" className="collapsible-trigger">
+              <span className="text-white font-semibold font-ui text-sm">ALIASES - Smart Command Shortcuts</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${aliasesOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </button>
+          </Collapsible.Trigger>
+          <div className="text-gray-300 text-xs mt-1 px-2">Choose powerful multi-command shortcuts that execute several actions with a single keypress.</div>
+          <Collapsible.Content>
+            <div className="space-y-3 py-2">
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <h4 className="text-white font-semibold text-sm font-ui">Fast Bomb Drop</h4>
+                <div className="space-y-2">
+                  <SettingCheckbox name="alias_dropbomb" label="Fast Bomb Drop" />
+                  <p className="text-xs text-gray-300">
+                    Press: slot3; slot5;. Release: drop; slot1;. Configure its key under Bind Settings → Alias Binds.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <h4 className="text-white font-semibold text-sm font-ui">Crosshair Toggle</h4>
+                <div className="space-y-2">
+                  <SettingCheckbox name="alias_crosshair_toggle" label="Toggle Crosshair Color" />
+                  <p className="text-xs text-gray-300">
+                    Toggle between yellow and white crosshair colors. Configure its key under Bind Settings → Alias Binds.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Collapsible.Content>
+        </Collapsible.Root>
+      </div>
+
+      {/* Settings Panel */}
+      <div className="mb-4">
+        <Collapsible.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
+          <Collapsible.Trigger asChild>
+            <button type="button" className="collapsible-trigger">
+              <span className="text-white font-semibold font-ui text-sm">SETTINGS - Game Settings & Optimizations</span>
+              <ChevronDown className={`h-4 w-4 transition-transform ${settingsOpen ? 'rotate-180' : 'rotate-0'}`} />
+            </button>
+          </Collapsible.Trigger>
+          <div className="text-gray-300 text-xs mt-1 px-2">Fine-tune every aspect of your CS2 experience. Adjust everything from crosshair appearance and HUD elements to network settings and graphics settings.</div>
+          <Collapsible.Content>
+            <div className="space-y-3 py-2">
+              {/* HUD */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">HUD</h4>
+                  <SectionSwitch name="hud" ariaLabel="Enable HUD settings" />
+                </div>
+                {hudOn && (
+                  <div className="space-y-3">
+                    <SettingRow
+                      name="cl_use_weapon_rarity_as_selection_color"
+                      label="Use weapon rarity as selection color"
+                      description="Use weapon rarity highlighting for selection color. 0 = Off, 1 = On. Default is 0."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="cl_hud_color"
+                      label="HUD color (index)"
+                      description="Change HUD color via index. 0 = Default. Other values depend on game palette."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Default' },
+                        { value: '1', label: '1' },
+                        { value: '2', label: '2' },
+                        { value: '3', label: '3' },
+                        { value: '4', label: '4' },
+                        { value: '5', label: '5' },
+                        { value: '6', label: '6' },
+                        { value: '7', label: '7' },
+                        { value: '8', label: '8' },
+                        { value: '9', label: '9' },
+                        { value: '10', label: '10' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="cl_radar_rotate"
+                      label="Rotate radar"
+                      description="Rotate radar to match player orientation. 0 = Off, 1 = On. Default is 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="cl_hud_radar_scale"
+                      label="Radar scale"
+                      description="Controls size of the radar HUD element. Typical range 0.8–1.3. Default is 1.0."
+                      type="number"
+                      step={0.05}
+                      min={0.5}
+                      max={2}
+                      defaultValue="1.0"
+                    />
+                    <SettingRow
+                      name="hud_scaling"
+                      label="HUD scaling"
+                      description="Overall HUD scale. Typical range 0.5–1.3. Default is 1.0."
+                      type="number"
+                      step={0.05}
+                      min={0.5}
+                      max={2}
+                      defaultValue="1.0"
+                    />
+                    <SettingRow
+                      name="cl_show_team_equipment"
+                      label="Show team equipment"
+                      description="Show teammates’ equipment on HUD. 0 = Off, 1 = On. Default is 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="r_drawtracers_firstperson"
+                      label="First-person tracers"
+                      description="Render bullet tracers in first-person. 0 = Off, 1 = On. Default is 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Mouse & Crosshair */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Mouse & Crosshair</h4>
+                  <SectionSwitch name="mouseCrosshair" ariaLabel="Enable Mouse & Crosshair settings" />
+                </div>
+                {crosshairOn && (
+                  <div className="space-y-3">
+                    <SettingRow
+                      name="cl_crosshairalpha"
+                      label="Crosshair transparency (alpha)"
+                      description="0–255. Default is 255."
+                      type="number"
+                      step={1}
+                      min={0}
+                      max={255}
+                      defaultValue="255"
+                    />
+                    <SettingRow
+                      name="cl_crosshaircolor_r"
+                      label="Crosshair color — Red (R)"
+                      description="0–255. Default is 255."
+                      type="number"
+                      step={1}
+                      min={0}
+                      max={255}
+                      defaultValue="255"
+                    />
+                    <SettingRow
+                      name="cl_crosshaircolor_g"
+                      label="Crosshair color — Green (G)"
+                      description="0–255. Default is 255."
+                      type="number"
+                      step={1}
+                      min={0}
+                      max={255}
+                      defaultValue="255"
+                    />
+                    <SettingRow
+                      name="cl_crosshaircolor_b"
+                      label="Crosshair color — Blue (B)"
+                      description="0–255. Default is 255."
+                      type="number"
+                      step={1}
+                      min={0}
+                      max={255}
+                      defaultValue="255"
+                    />
+                    <SettingRow
+                      name="cl_crosshair_t"
+                      label="T-crosshair"
+                      description="Enable T-shaped crosshair. 0 = Off, 1 = On. Default is 0."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="cl_crosshairgap_useweaponvalue"
+                      label="Use weapon gap value"
+                      description="Use weapon-defined crosshair gap. 0 = Off, 1 = On. Default is 0."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="sensitivity"
+                      label="Mouse sensitivity"
+                      description="General mouse sensitivity. Default varies (e.g., 2.5)."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      defaultValue="2.5"
+                    />
+                    <SettingRow
+                      name="zoom_sensitivity_ratio_mouse"
+                      label="Zoom sensitivity ratio (ADS)"
+                      description="Sensitivity multiplier when zoomed/ADS. Typical 1.0. Default 1.0."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      defaultValue="1.0"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Viewmodel */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Viewmodel</h4>
+                  <SectionSwitch name="viewmodel" ariaLabel="Enable Viewmodel settings" />
+                </div>
+                {viewmodelOn && (
+                  <div className="space-y-3">
+                    <SettingRow
+                      name="viewmodel_fov"
+                      label="Viewmodel FOV"
+                      description="Field of view for weapon model. Range ~54–68. Default 60–68."
+                      type="number"
+                      step={1}
+                      min={54}
+                      max={68}
+                      defaultValue="68"
+                    />
+                    <SettingRow
+                      name="viewmodel_offset_x"
+                      label="Viewmodel offset X"
+                      description="Horizontal offset of viewmodel. Range ~-2 to 2."
+                      type="number"
+                      step={0.05}
+                      min={-2}
+                      max={2}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="viewmodel_offset_y"
+                      label="Viewmodel offset Y"
+                      description="Vertical offset of viewmodel. Range ~-2 to 2."
+                      type="number"
+                      step={0.05}
+                      min={-2}
+                      max={2}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="viewmodel_offset_z"
+                      label="Viewmodel offset Z"
+                      description="Depth offset of viewmodel. Range ~-2 to 2."
+                      type="number"
+                      step={0.05}
+                      min={-2}
+                      max={2}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="viewmodel_presetpos"
+                      label="Viewmodel preset"
+                      description="Preset position for viewmodel. Use 0–3; 3 enables custom offsets."
+                      type="select"
+                      options={[
+                        { value: '0', label: '0' },
+                        { value: '1', label: '1' },
+                        { value: '2', label: '2' },
+                        { value: '3', label: '3' },
+                      ]}
+                      defaultValue="3"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Audio */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Audio</h4>
+                  <SectionSwitch name="sound" ariaLabel="Enable Audio settings" />
+                </div>
+                {audioOn && (
+                  <div className="space-y-3">
+                    <SettingRow
+                      name="volume"
+                      label="Master volume"
+                      description="0.00–1.00. Default ~0.8."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      max={1}
+                      defaultValue="0.8"
+                    />
+                    <SettingRow
+                      name="snd_headphone_eq"
+                      label="Headphone EQ"
+                      description="Enable headphone EQ profile. 0 = Off, 1 = On. Default 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="snd_mixahead"
+                      label="Audio mix-ahead"
+                      description="Audio buffer size. Lower values reduce latency. Typical 0.05–0.10."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      max={1}
+                      defaultValue="0.05"
+                    />
+                    <SettingRow
+                      name="snd_spatialize_lerp"
+                      label="Spatialize lerp"
+                      description="Controls spatialization smoothing. 0.0–1.0. Default 0.5."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      max={1}
+                      defaultValue="0.5"
+                    />
+                    <SettingRow
+                      name="snd_menumusic_volume"
+                      label="Menu music volume"
+                      description="0.00–1.00. Default 0.00."
+                      type="number"
+                      step={0.01}
+                      min={0}
+                      max={1}
+                      defaultValue="0.00"
+                    />
+                    <SettingRow
+                      name="snd_mute_mvp_music_live_players"
+                      label="Mute MVP music for live players"
+                      description="Mute MVP music when players are still alive. 0 = Off, 1 = On. Default 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="snd_autodetect_latency"
+                      label="Auto-detect audio latency"
+                      description="Automatically detect audio latency. 0 = Off, 1 = On. Default 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Network Rate */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Network Rate</h4>
+                  <SectionSwitch name="rate" ariaLabel="Enable Network settings" />
+                </div>
+                {networkOn && (
+                  <div className="space-y-3">
+                    <SettingRow
+                      name="cl_invites_only_friends"
+                      label="Invites: friends only"
+                      description="Restrict invites to friends only. 0 = Off, 1 = On. Default 1."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="cl_invites_only_mainmenu"
+                      label="Invites: main menu only"
+                      description="Only allow invites from main menu. 0 = Off, 1 = On. Default 0."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="cl_join_advertise"
+                      label="Advertise lobby"
+                      description="Advertise your lobby to friends. 0 = Off, 1 = On. Default 0."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="0"
+                    />
+                    <SettingRow
+                      name="cl_clock_correction"
+                      label="Clock correction"
+                      description="Enable client clock correction. 0 = Off, 1 = On."
+                      type="select"
+                      options={[
+                        { value: '0', label: 'Off' },
+                        { value: '1', label: 'On' },
+                      ]}
+                      defaultValue="1"
+                    />
+                    <SettingRow
+                      name="cl_interp_ratio"
+                      label="Interp ratio"
+                      description="Interpolation ratio (1 or 2 recommended)."
+                      type="select"
+                      options={[
+                        { value: '1', label: '1' },
+                        { value: '2', label: '2' },
+                      ]}
+                      defaultValue="2"
+                    />
+                    <SettingRow
+                      name="cl_interp"
+                      label="Interpolation (seconds)"
+                      description="Interpolation time. Typical values around 0.031 for 64 tick; 0 for auto."
+                      type="number"
+                      step={0.001}
+                      min={0}
+                      defaultValue="0.031"
+                    />
+                    <SettingRow
+                      name="cl_updaterate"
+                      label="Updaterate (tick rate)"
+                      description="Updates per second. 64 or 128."
+                      type="select"
+                      options={[
+                        { value: '64', label: '64' },
+                        { value: '128', label: '128' },
+                      ]}
+                      defaultValue="128"
+                    />
+                    <SettingRow
+                      name="cl_cmdrate"
+                      label="Cmdrate (send rate)"
+                      description="Commands per second. 64 or 128."
+                      type="select"
+                      options={[
+                        { value: '64', label: '64' },
+                        { value: '128', label: '128' },
+                      ]}
+                      defaultValue="128"
+                    />
+                    <SettingRow
+                      name="mm_dedicated_search_maxping"
+                      label="Max matchmaking ping"
+                      description="Maximum ping allowed for matchmaking servers (ms)."
+                      type="number"
+                      step={1}
+                      min={10}
+                      max={300}
+                      defaultValue="60"
+                    />
+                    <SettingRow
+                      name="rate"
+                      label="Rate (bytes/sec)"
+                      description="Max data rate (bytes/sec). Common values: 786432 (768 KB/s) or 1048576 (1 MB/s)."
+                      type="number"
+                      step={1024}
+                      min={65536}
+                      max={1048576}
+                      defaultValue="1048576"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Game Settings + Damage Prediction */}
+              <div className="bg-[#2A2F26] border border-[#889180] rounded p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-white font-semibold text-sm font-ui">Game Settings</h4>
+                  <SectionSwitch name="gameSettings" ariaLabel="Enable Game Settings" />
+                </div>
+                {gameSettingsOn && (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <SettingRow
+                        name="r_show_build_info"
+                        label="Show build info overlay"
+                        description="Displays build/version info overlay in-game. 0 = Off, 1 = On. Default is 0."
+                        type="select"
+                        options={[
+                          { value: '0', label: 'Off' },
+                          { value: '1', label: 'On' },
+                        ]}
+                        defaultValue="0"
+                      />
+                      <SettingRow
+                        name="cl_allow_animated_avatars"
+                        label="Allow animated avatars"
+                        description="Enable/disable animated avatars in UI. 0 = Off, 1 = On. Default is 1."
+                        type="select"
+                        options={[
+                          { value: '0', label: 'Off' },
+                          { value: '1', label: 'On' },
+                        ]}
+                        defaultValue="1"
+                      />
+                      <SettingRow
+                        name="cl_teamcounter_playercount_instead_of_avatars"
+                        label="Team counter: show player count"
+                        description="Show player count instead of avatars in team counter. 0 = Avatars, 1 = Player count. Default is 0."
+                        type="select"
+                        options={[
+                          { value: '0', label: 'Avatars' },
+                          { value: '1', label: 'Player count' },
+                        ]}
+                        defaultValue="0"
+                      />
+                    </div>
+
+                    <div className="space-y-3">
+                      <h5 className="text-white font-semibold text-xs font-ui">Damage Prediction</h5>
+                      <div className="space-y-3">
+                        <SettingRow
+                          name="cl_predict_body_shot_fx"
+                          label="Body shot FX"
+                          description="Enable/disable predicted body shot effect. 1 = On, 2 = Off. Default is 2."
+                          type="select"
+                          options={[
+                            { value: '1', label: 'On' },
+                            { value: '2', label: 'Off' },
+                          ]}
+                          defaultValue="2"
+                        />
+                        <SettingRow
+                          name="cl_predict_head_shot_fx"
+                          label="Headshot FX"
+                          description="Enable/disable predicted headshot effect. 1 = On, 2 = Off. Default is 2."
+                          type="select"
+                          options={[
+                            { value: '1', label: 'On' },
+                            { value: '2', label: 'Off' },
+                          ]}
+                          defaultValue="2"
+                        />
+                        <SettingRow
+                          name="cl_predict_kill_ragdolls"
+                          label="Kill ragdolls"
+                          description="Enable/disable predicted kill ragdolls. 1 = On, 2 = Off. Default is 1."
+                          type="select"
+                          options={[
+                            { value: '1', label: 'On' },
+                            { value: '2', label: 'Off' },
+                          ]}
+                          defaultValue="1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </Collapsible.Content>
+        </Collapsible.Root>
+      </div>
+
+      </div>
   )
 }

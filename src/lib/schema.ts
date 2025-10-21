@@ -1,3 +1,4 @@
+'use strict'
 import * as z from "zod";
 
 export const customBindSchema = z.object({
@@ -141,26 +142,34 @@ export const autoexecFormSchema = z.object({
   customBinds: z.array(customBindSchema).optional(),
   
   // Communication Binds
-  voice_bind: z.string().optional(),
+  voice_bind: z.string().default("T"),
   radio_bind: z.string().optional(),
+  teammenu_bind: z.string().default("M"),
+  allchat_bind: z.string().default("Y"),
+  teamchat_bind: z.string().default("U"),
   
   // Utility Binds
-  scoreboard_bind: z.string().optional(),
-  drop_bind: z.string().optional(),
-  use_bind: z.string().optional(),
-  reload_bind: z.string().optional(),
+  scoreboard_bind: z.string().default("TAB"),
+  drop_bind: z.string().default("G"),
+  use_bind: z.string().default("E"),
+  reload_bind: z.string().default("R"),
   
   // Movement Binds
-  jump_bind: z.string().optional(),
-  duck_bind: z.string().optional(),
-  walk_bind: z.string().optional(),
+  forward_bind: z.string().default("W"),
+  moveleft_bind: z.string().default("A"),
+  back_bind: z.string().default("S"),
+  moveright_bind: z.string().default("D"),
+  jump_bind: z.string().default("SPACE"),
+  duck_bind: z.string().default("LEFT CTRL"),
+  walk_bind: z.string().default("LEFT SHIFT"),
   
   // Weapon & Equipment Binds
-  slot1_bind: z.string().optional(),
-  slot2_bind: z.string().optional(),
+  slot1_bind: z.string().default("1"),
+  slot2_bind: z.string().default("2"),
+  slot2_bind_alt: z.string().default("Q"),
   slot3_bind: z.string().optional(),
-  slot4_bind: z.string().optional(),
-  slot5_bind: z.string().optional(),
+  slot4_bind: z.string().default("4"),
+  slot5_bind: z.string().default("5"),
   slot6_bind: z.string().optional(),
   slot7_bind: z.string().optional(),
   slot8_bind: z.string().optional(),
@@ -169,13 +178,21 @@ export const autoexecFormSchema = z.object({
   buymenu_bind: z.string().optional(),
   
   // Quick Actions
-  toggleconsole_bind: z.string().optional(),
+  toggleconsole_bind: z.string().default("F9"),
   cleardecals_bind: z.string().optional(),
   inspect_bind: z.string().optional(),
+  
+  // Alias Binds
+  dropbomb_bind: z.string().default("^"),
+  crosshair_toggle_bind: z.string().default("LEFTARROW"),
   
   // Include options (checkboxes)
   includeSections: z.object({
     binds: z.boolean().default(false),
+    // New per-binds section toggles
+    movementBinds: z.boolean().default(false),
+    weaponsActionBinds: z.boolean().default(false),
+    uiCommBinds: z.boolean().default(false),
     customBinds: z.boolean().default(false),
     aliases: z.boolean().default(false),
     settings: z.boolean().default(false),
@@ -187,6 +204,8 @@ export const autoexecFormSchema = z.object({
     sound: z.boolean().default(false),
     rate: z.boolean().default(false),
     additional: z.boolean().default(false),
+    // Add new Game Settings tab toggle
+    gameSettings: z.boolean().default(false),
     // Performance Settings
     fpsMax: z.boolean().default(false),
     teamEquipment: z.boolean().default(false),
