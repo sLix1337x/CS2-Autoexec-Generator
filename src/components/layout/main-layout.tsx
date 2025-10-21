@@ -110,7 +110,7 @@ export default function MainLayout({
               </p>
               <div className="flex gap-6">
                 <a 
-                  href="https://github.com/your-github/cs2-autoexec-gen" 
+                  href="https://github.com/sLix1337x" 
                   className="text-sm font-medium text-[#A0AA95] transition-colors hover:text-white" 
                   target="_blank" 
                   rel="noopener noreferrer"
