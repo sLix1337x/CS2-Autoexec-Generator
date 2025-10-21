@@ -11,6 +11,9 @@ const InlinePreview: React.FC = () => {
   const { watch, getValues } = useFormContext<AutoexecFormValues>();
   const values = watch();
 
+  // New: toggle echo visibility in preview (default hidden)
+  const [showEcho, setShowEcho] = useState(false);
+
   const previewText = useMemo(() => {
     try {
       return generateAutoexecContent(getValues(), { includeTimestamp: false }).join('\n');
@@ -19,9 +22,16 @@ const InlinePreview: React.FC = () => {
     }
   }, [values, getValues]);
 
+  // Filter lines based on echo visibility
+  const linesForDisplay = useMemo(() => {
+    const lines = previewText.split('\n');
+    if (showEcho) return lines;
+    return lines.filter((line) => !line.trimStart().startsWith('echo'));
+  }, [previewText, showEcho]);
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(previewText);
+      await navigator.clipboard.writeText(linesForDisplay.join('\n'));
       toast.success('Preview copied to clipboard', {
         position: 'bottom-right',
         autoClose: 2000,
@@ -45,6 +55,18 @@ const InlinePreview: React.FC = () => {
            Autoexec Preview
          </CardTitle>
         <div className="flex items-center gap-2">
+          {/* Echo toggle */}
+          <label className="flex items-center gap-2 text-sm text-[#E5E9F2]" htmlFor="inline-show-echo-toggle">
+            <input
+              id="inline-show-echo-toggle"
+              type="checkbox"
+              className="h-4 w-4 accent-[#87CEEB]"
+              checked={showEcho}
+              onChange={(e) => setShowEcho(e.target.checked)}
+              aria-label="Show echo messages in preview"
+            />
+            <span>Show echo messages</span>
+          </label>
           <Button 
             type="button"
             variant="outline" 
@@ -82,7 +104,7 @@ const InlinePreview: React.FC = () => {
             className={`font-ui text-sm bg-secondary/10 p-3 rounded-md whitespace-pre-wrap ${expanded ? 'max-h-none overflow-visible' : 'max-h-64 overflow-auto'}`}
           >
             <code aria-label="Autoexec preview with line numbers">
-              {previewText.split('\n').map((line, idx) => (
+              {linesForDisplay.map((line, idx) => (
                 <div key={idx} className="flex">
                   <span aria-hidden="true" className="w-8 md:w-10 text-left pr-2 text-[#A0AA95] select-none">{idx + 1}</span>
                   <span className="whitespace-pre-wrap">{line.length ? line : ' '}</span>

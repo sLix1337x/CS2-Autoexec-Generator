@@ -10,6 +10,8 @@ const StandalonePreview: React.FC = () => {
   const { watch, getValues } = useFormContext<AutoexecFormValues>();
   const values = watch();
   const [expanded, setExpanded] = useState(false);
+  // New: toggle echo visibility in preview (default hidden)
+  const [showEcho, setShowEcho] = useState(false);
 
   const previewText = useMemo(() => {
     try {
@@ -19,9 +21,74 @@ const StandalonePreview: React.FC = () => {
     }
   }, [values, getValues]);
 
+  // Map selected consoleColor to a CSS hex for preview coloring
+  const consoleColorHex = useMemo(() => {
+    const col = watch('consoleColor');
+    return col === 'pink' ? '#FF69B4'
+      : col === 'lightblue' ? '#87CEEB'
+      : col === 'orange' ? '#FFA500'
+      : col === 'yellow' ? '#FFFF00'
+      : col === 'green' ? '#00FF00'
+      : col === 'red' ? '#FF0000'
+      : '#FF69B4';
+  }, [values?.consoleColor]);
+
+  // Render a single preview line with colored value, comments, and echo
+  const renderColoredLine = (line: string) => {
+    const trimmed = line.trimStart();
+
+    // Entire comment lines are light grey
+    if (trimmed.startsWith('//')) {
+      return <span className="whitespace-pre-wrap text-[#A0AA95]">{line.length ? line : ' '}</span>;
+    }
+
+    // Echo lines should be red
+    if (trimmed.startsWith('echo')) {
+      return <span className="whitespace-pre-wrap" style={{ color: '#FF0000' }}>{line.length ? line : ' '}</span>;
+    }
+
+    // Split inline comment part if present
+    const commentIndex = line.indexOf('//');
+    const prefix = commentIndex >= 0 ? line.slice(0, commentIndex) : line;
+    const comment = commentIndex >= 0 ? line.slice(commentIndex) : '';
+
+    // Find quoted value including trailing semicolon (e.g., "FF25FFFF"; or ".022";)
+    const match = prefix.match(/"[^"]*";/);
+    if (!match) {
+      // No quoted value: just render, with inline comment grey if present
+      return (
+        <span className="whitespace-pre-wrap">
+          <span className="whitespace-pre-wrap">{prefix}</span>
+          {comment && <span className="whitespace-pre-wrap text-[#A0AA95]">{comment}</span>}
+        </span>
+      );
+    }
+
+    const valStart = prefix.indexOf(match[0]);
+    const before = prefix.slice(0, valStart);
+    const valueToken = match[0];
+    const after = prefix.slice(valStart + valueToken.length);
+
+    return (
+      <span className="whitespace-pre-wrap">
+        <span className="whitespace-pre-wrap">{before}</span>
+        <span className="whitespace-pre-wrap" style={{ color: consoleColorHex }}>{valueToken}</span>
+        <span className="whitespace-pre-wrap">{after}</span>
+        {comment && <span className="whitespace-pre-wrap text-[#A0AA95]">{comment}</span>}
+      </span>
+    );
+  };
+
+  // Filter lines based on echo visibility
+  const linesForDisplay = useMemo(() => {
+    const lines = previewText.split('\n');
+    if (showEcho) return lines;
+    return lines.filter((line) => !line.trimStart().startsWith('echo'));
+  }, [previewText, showEcho]);
+
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(previewText);
+      await navigator.clipboard.writeText(linesForDisplay.join('\n'));
       toast.success('Preview copied to clipboard', {
         position: 'bottom-right',
         autoClose: 2000,
@@ -41,6 +108,18 @@ const StandalonePreview: React.FC = () => {
       <header id="PreviewWindowHeader" className="retro-preview-header">
         <h3 id="preview-title" className="text-lg font-ui">Autoexec Preview Window</h3>
         <nav className="flex items-center gap-2" role="group" aria-label="Preview controls">
+          {/* Echo toggle */}
+          <label className="flex items-center gap-2 text-sm text-[#E5E9F2]" htmlFor="show-echo-toggle">
+            <input
+              id="show-echo-toggle"
+              type="checkbox"
+              className="h-4 w-4 accent-[#87CEEB]"
+              checked={showEcho}
+              onChange={(e) => setShowEcho(e.target.checked)}
+              aria-label="Show echo messages in preview"
+            />
+            <span>Show echo messages</span>
+          </label>
           <RetroButton 
             type="button"
             variant="outline" 
@@ -86,10 +165,10 @@ const StandalonePreview: React.FC = () => {
             }`}
           >
             <code aria-label="Autoexec preview with line numbers">
-              {previewText.split('\n').map((line, idx) => (
+              {linesForDisplay.map((line, idx) => (
                 <div key={idx} className="flex">
                   <span aria-hidden="true" className="w-8 md:w-10 text-left pr-2 text-[#A0AA95] select-none">{idx + 1}</span>
-                  <span className="whitespace-pre-wrap">{line.length ? line : ' '}</span>
+                  {renderColoredLine(line)}
                 </div>
               ))}
             </code>
