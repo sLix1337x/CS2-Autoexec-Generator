@@ -54,7 +54,7 @@ export default function MainLayout({
   };
 
   return (
-    <section className="min-h-screen bg-[#333D30] text-foreground antialiased relative overflow-hidden">
+    <section className="min-h-screen bg-[#1B1B1B] text-foreground antialiased relative overflow-hidden">
       {/* Removed texture/gradient overlays to reflect solid retro palette */}
       <NextSeo
         title={title}
@@ -93,7 +93,7 @@ export default function MainLayout({
 
       <div className="flex min-h-screen flex-col font-ui text-foreground">
         {/* Removed header and nav per user request */}
-        <main className="flex-1 bg-[#4C5844] text-white pb-8 md:pb-12">
+        <main className="flex-1 bg-[#1B1B1B] text-white pb-8 md:pb-12">
           <section className="w-full">
             <div className="relative z-10 font-ui">
                {/* Main Content */}
@@ -102,7 +102,7 @@ export default function MainLayout({
           </section>
         </main>
         
-        <footer className="border-t border-[#889180] bg-[#4C5844] py-6">
+        <footer className="border-t border-[#889180] bg-[#1B1B1B] py-6">
           <div className="container px-4">
             <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
               <p className="text-center text-sm text-[#A0AA95] md:text-left">

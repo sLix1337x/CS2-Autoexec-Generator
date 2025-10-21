@@ -78,6 +78,11 @@ export const autoexecFormSchema = z.object({
   r_drawparticles: z.string().optional(),
   r_drawtracers_firstperson: z.string().default("1"),
   cl_disablefreezecam: z.string().optional(),
+
+  // Game Settings
+  r_show_build_info: z.string().default("0"),
+  cl_allow_animated_avatars: z.string().default("1"),
+  cl_teamcounter_playercount_instead_of_avatars: z.string().default("0"),
   
   // Team & Equipment Settings
   cl_show_team_equipment: z.string().default("1"),
@@ -121,12 +126,12 @@ export const autoexecFormSchema = z.object({
   viewmodel_offset_z: z.string().optional(),
   
   // Console Color
-  consoleColor: z.enum(["pink", "lightblue", "orange", "yellow", "green", "red"]).default("pink"),
+  consoleColor: z.enum(["pink", "lightblue", "orange", "yellow", "green", "red"]).default("lightblue"),
   
   // Prediction Effects
-  predictBodyShotFx: z.boolean().default(false),
-  predictHeadShotFx: z.boolean().default(false),
-  predictKillRagdolls: z.boolean().default(false),
+  cl_predict_body_shot_fx: z.string().default("2"),
+  cl_predict_head_shot_fx: z.string().default("2"),
+  cl_predict_kill_ragdolls: z.string().default("1"),
   
   // Additional Commands
   additionalCommands: z.string().optional(),

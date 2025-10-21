@@ -11,6 +11,9 @@ export function cn(...inputs: ClassValue[]) {
 export function generateAutoexecContent(formData: any, options?: { includeTimestamp?: boolean }): string[] {
   const content: string[] = [];
   
+  // Utility to check if a per-setting checkbox is enabled (defined early to avoid ReferenceError)
+  const shouldInclude = (key: string) => Boolean(formData?.includeCommands?.[key]);
+
   // Helper function for consistent alignment
   const formatCommand = (command: string, value: string, description?: string): string => {
     const commandPart = command;
@@ -34,10 +37,12 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
     green: '008000FF',
     red: 'AF0000FF'
   };
-  const selectedColor = formData.consoleColor || 'pink';
+  const selectedColor = formData.consoleColor || 'lightblue';
   const colorCode = colorMap[selectedColor] || colorMap.pink;
   content.push(formatCommand('log_color "Console"', colorCode, 'Console text color'));
   content.push('');
+
+
 
   // Initialization header messages
   content.push('echo |                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]');
@@ -45,14 +50,35 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   content.push('echo |                                     [AUTOEXEC] Initializing configuration... [AUTOEXEC]');
   content.push('');
 
-  // Utility to check if a per-setting checkbox is enabled
-  const shouldInclude = (key: string) => Boolean(formData?.includeCommands?.[key]);
+
 
   // Basic commands (always included)
   content.push(formatCommand('m_yaw', '.022', 'Mouse yaw sensitivity multiplier'));
   content.push(formatCommand('bind mouse_x', 'yaw', 'Bind horizontal mouse movement to yaw'));
   content.push(formatCommand('bind mouse_y', 'pitch', 'Bind vertical mouse movement to pitch'));
   content.push('');
+
+  // Game Settings (moved below bind mouse_y)
+  const gameLines: string[] = [];
+  if (shouldInclude('r_show_build_info')) gameLines.push(formatCommand('r_show_build_info', formData.r_show_build_info ?? defaultAutoexecValues.r_show_build_info, 'Show build info overlay'));
+  if (shouldInclude('cl_allow_animated_avatars')) gameLines.push(formatCommand('cl_allow_animated_avatars', formData.cl_allow_animated_avatars ?? defaultAutoexecValues.cl_allow_animated_avatars, 'Allow animated avatars'));
+  if (shouldInclude('cl_teamcounter_playercount_instead_of_avatars')) gameLines.push(formatCommand('cl_teamcounter_playercount_instead_of_avatars', formData.cl_teamcounter_playercount_instead_of_avatars ?? defaultAutoexecValues.cl_teamcounter_playercount_instead_of_avatars, 'Show player count instead of avatars in team counter'));
+  if (shouldInclude('fps_max')) gameLines.push(formatCommand('fps_max', formData.fps_max ?? defaultAutoexecValues.fps_max, 'Maximum FPS limit (0 = unlimited)'));
+  if (gameLines.length) {
+    // Removed header per user request
+    gameLines.forEach((l) => content.push(l));
+    content.push('');
+  }
+
+  // Damage Prediction (moved below bind mouse_y)
+  const dpLines: string[] = [];
+  if (shouldInclude('cl_predict_body_shot_fx')) dpLines.push(formatCommand('cl_predict_body_shot_fx', formData.cl_predict_body_shot_fx ?? defaultAutoexecValues.cl_predict_body_shot_fx, 'Body shot prediction FX'));
+  if (shouldInclude('cl_predict_head_shot_fx')) dpLines.push(formatCommand('cl_predict_head_shot_fx', formData.cl_predict_head_shot_fx ?? defaultAutoexecValues.cl_predict_head_shot_fx, 'Headshot prediction FX'));
+  if (shouldInclude('cl_predict_kill_ragdolls')) dpLines.push(formatCommand('cl_predict_kill_ragdolls', formData.cl_predict_kill_ragdolls ?? defaultAutoexecValues.cl_predict_kill_ragdolls, 'Kill ragdolls prediction FX'));
+  if (dpLines.length) {
+    dpLines.forEach((l) => content.push(l));
+    content.push('');
+  }
 
   // BINDS section header
   if (formData.includeSections?.binds) {
@@ -278,9 +304,9 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   // Network Troubleshooting Settings (only if explicitly enabled)
   if (formData.includeNetworkTroubleshooting) {
     content.push('// --- NETWORK TROUBLESHOOTING ---');
-    content.push('net_graphpos                                                    "1";');
-    content.push('net_graphproportionalfont                                       "0";');
-    content.push('net_graphheight                                                 "64";');
+    content.push(formatCommand('net_graphpos', '1'));
+    content.push(formatCommand('net_graphproportionalfont', '0'));
+    content.push(formatCommand('net_graphheight', '64'));
     content.push('');
   }
 
@@ -297,6 +323,13 @@ export function generateAutoexecContent(formData: any, options?: { includeTimest
   content.push('echo |                                                                              .-Y');
   content.push('echo |                                     [AUTOEXEC] Initializing configuration..."');
   content.push('echo |                                  -x"');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
+  content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
   content.push('echo |      SCRIPT INITIALIZED - SYSTEM SETTINGS CALIBRATED - AUTOEXEC SUCCESSFULLY LOADED | CREATED BY CS2GUARD');
@@ -416,6 +449,10 @@ export const defaultAutoexecValues = {
   mat_fullscreen: "1",
   mat_antialias: "8",
   mat_motion_blur_enabled: "0",
+  // Game Settings defaults
+  r_show_build_info: "0",
+  cl_allow_animated_avatars: "1",
+  cl_teamcounter_playercount_instead_of_avatars: "0",
   
   // Binds defaults
   voice_bind: "",
@@ -445,8 +482,8 @@ export const defaultAutoexecValues = {
   additionalCommands: "",
   customBinds: [],
   
-  consoleColor: "pink",
-  predictBodyShotFx: false,
-  predictHeadShotFx: false,
-  predictKillRagdolls: false
+  consoleColor: "lightblue",
+  cl_predict_body_shot_fx: "2",
+  cl_predict_head_shot_fx: "2",
+  cl_predict_kill_ragdolls: "1"
 };

@@ -114,7 +114,7 @@
     line-height: 1.5;
     min-height: 100vh;
     /* Steam 2003 background color; texture can be added from /public later */
-    background-color: #4C5844;
+    background-color: #1B1B1B;
     background-image: none;
     background-repeat: no-repeat;
     background-size: cover;
@@ -426,7 +426,7 @@ body {
   line-height: 1.5;
   min-height: 100vh;
   /* Steam 2003 background color; texture can be added from /public later */
-  background-color: #4C5844;
+  background-color: #1B1B1B;
   background-image: none;
   background-repeat: no-repeat;
   background-size: cover;
@@ -830,7 +830,7 @@ button:active, .btn:active {
 }
 
 .retro-preview-header {
-  @apply bg-[#111111] text-white p-4 rounded-t-lg flex items-center justify-between;
+  @apply bg-[#111111] text-white px-4 py-3 rounded-t-lg flex items-center justify-between border-b border-[#282E22];
 }
 
 .retro-preview-content {
@@ -851,4 +851,73 @@ button:active, .btn:active {
 .retro-preview-code.expanded {
   max-height: none;
   overflow: visible;
+}
+
+/* Collapsible panel styles for "Include Sections" */
+.collapsible-panel {
+  background-color: #2A2F26; /* deep panel */
+  border: 1px solid #889180; /* olive border */
+  border-radius: 0.5rem; /* rounded */
+}
+
+.collapsible-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background-color: #111111; /* black header */
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #282E22;
+  border-radius: 0.5rem; /* match panel */
+  font-family: 'Tahoma', 'Segoe UI', 'Verdana', 'Geneva', sans-serif;
+  font-size: 0.95rem;
+}
+
+.collapsible-trigger:hover {
+  background-color: #0f0f0f;
+}
+
+.collapsible-content {
+  overflow: hidden;
+  transition: max-height 300ms ease, opacity 200ms ease, transform 200ms ease;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.collapsible-content[data-state="open"] {
+  max-height: 1500px; /* allow smooth open for typical content */
+  opacity: 1;
+  transform: none;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.collapsible-content[data-state="closed"] {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Option card styles: sleek dark tiles like Radix examples */
+.option-card {
+  background-color: #1b1b1b;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 0.75rem 0.875rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  transition: background-color 160ms ease, box-shadow 200ms ease, transform 120ms ease;
+}
+.option-card:hover {
+  background-color: #212121;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+}
+.option-card:active {
+  transform: translateY(1px);
+}
+.option-card:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.35), 0 12px 28px rgba(0,0,0,0.45);
 }

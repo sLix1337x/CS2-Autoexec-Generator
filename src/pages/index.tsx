@@ -76,7 +76,7 @@ export default function HomePage() {
         <meta name="description" content="Generate a custom Counter-Strike 2 autoexec.cfg file with a retro twist" />
       </Head>
       
-      <article className="flex flex-col space-y-8 max-w-6xl mx-auto w-full px-4 pt-8" aria-labelledby="page-title">
+      <article className="flex flex-col space-y-8 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8" aria-labelledby="page-title">
         {/* Page header / hero */}
         <section className="retro-header-wrapper" role="region" aria-labelledby="page-title">
           <div className="retro-header-top">

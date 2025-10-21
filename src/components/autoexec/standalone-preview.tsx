@@ -106,7 +106,10 @@ const StandalonePreview: React.FC = () => {
   return (
     <aside className="retro-preview-standalone" role="complementary" aria-labelledby="preview-title">
       <header id="PreviewWindowHeader" className="retro-preview-header">
-        <h3 id="preview-title" className="text-lg font-ui">Autoexec Preview Window</h3>
+        <div id="preview-title" className="flex items-center gap-2">
+             <span className="inline-block w-2 h-5 bg-[#6369D1] border border-[#6369D1]" aria-hidden="true"></span>
+             <span className="text-white font-semibold font-ui text-sm">AUTOEXEC PREVIEW</span>
+           </div>
         <nav className="flex items-center gap-2" role="group" aria-label="Preview controls">
           {/* Echo toggle */}
           <label className="flex items-center gap-2 text-sm text-[#E5E9F2]" htmlFor="show-echo-toggle">

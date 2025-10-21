@@ -21,7 +21,7 @@ export function DotBackground() {
         )}
       />
       {/* Optional radial fade towards the edges to soften the grid */}
-      <div className="absolute inset-0 bg-[#333D30] dark:bg-[#333D30] [mask-image:radial-gradient(ellipse_at_center,transparent_35%,black)]" />
+      <div className="absolute inset-0 bg-[#1B1B1B] dark:bg-[#1B1B1B] [mask-image:radial-gradient(ellipse_at_center,transparent_35%,black)]" />
     </div>
   );
 }
