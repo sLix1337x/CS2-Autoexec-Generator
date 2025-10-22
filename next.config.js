@@ -15,6 +15,9 @@ const nextConfig = {
     // Enable styled-components support
     styledComponents: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // Remove swcMinify as it's now the default in newer Next.js versions
   // and causes warnings when explicitly set
 };

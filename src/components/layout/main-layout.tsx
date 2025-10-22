@@ -84,8 +84,7 @@ export default function MainLayout({
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#1a1a1a" />
-        <link rel="icon" href="/images/cs2guard-logo-white.png" />
-        <link rel="apple-touch-icon" href="/images/cs2guard-logo-white.png" />
+        <link rel="icon" href="/favicon.ico" />
         <link rel="manifest" href="/manifest.json" />
       </Head>
 
