@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Sun, Moon } from 'lucide-react';
 import DotBackground from '@/components/ui/dot-background';
+import { Analytics } from '@vercel/analytics/next';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -151,6 +152,7 @@ export default function MainLayout({
         }}
         className="[--toastify-color-light:theme(colors.background)] [--toastify-color-dark:theme(colors.background)] [--toastify-text-color-light:theme(colors.foreground)] [--toastify-text-color-dark:theme(colors.foreground)]"
       />
+      <Analytics />
     </section>
   );
 };
